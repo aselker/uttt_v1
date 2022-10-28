@@ -8,9 +8,7 @@ def victory_state(board):
     """Returns 0 for cat's game or incomplete, NaN for both win."""
     h_sums = np.sum(board, axis=0)
     v_sums = np.sum(board, axis=1)
-    sums = np.concatenate(
-        (h_sums, v_sums, [board[0, 0] + board[1, 1] + board[2, 2], board[2, 0] + board[1, 1] + board[0, 2]])
-    )
+    sums = np.concatenate((h_sums, v_sums, [board[0, 0] + board[1, 1] + board[2, 2], board[2, 0] + board[1, 1] + board[0, 2]]))
 
     o_wins = -3 in sums
     x_wins = 3 in sums
@@ -50,10 +48,10 @@ def calc_goodness(board):
     goodnesses[key] = goodness
     return goodness
 
-if __name__ == "__main__":
-    board = np.zeros((3,3), dtype=np.int8)
-    board[0,0] = 1
-    board[1,1] = 1
-    board[2,2] = -1
-    print(calc_goodness(board))
 
+if __name__ == "__main__":
+    board = np.zeros((3, 3), dtype=np.int8)
+    board[0, 0] = 1
+    board[1, 1] = 1
+    board[2, 2] = -1
+    print(calc_goodness(board))
