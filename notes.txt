@@ -1,0 +1,12 @@
+How to represent moves for MCTS and for NN?  Only some are valid.
+	* Within cxc, some spots already gone.  Maybe just lose if you pick one?
+	* You can only pick within one cxc for early game, eventually you can choose.  Two separate 3x3's, or choose from a full ixi and lose if you pick the wrong one?  Either way, 81 choices, most usually lose.
+	* In MCTS, I can easily list all possible moves.  But because it's a variable number, it can't really be the output of a NN.  And I'd rather have the output of the MCTS be the same as from the NN.
+	* But, a random playout is likely to hit a suicide move if it's given 81 choices.  So most playouts will be useless, and there might be a ton of positive weight on getting to choose your cxc, because then most moves don't lose.
+	* How does AlphaGo do it?
+	* Best plan as of now: pass out two 3x3's, or a 3x3x3x3, and instantly lose if invalid.  Hard-code into MCTS not to insta-lose, let the NN learn that (it should learn fast).  As an alternative, we could ignore the chosen cxc if we're not free to choose one; this is sort of inconsistent with losing if we choose an occupied spot within the cxc, but might make it easier for the NN to learn to select a cxc.  (Actaully I think the latter is my best plan as of now.)
+	* I think it'd be nice to represent a distribution over all possible moves, so there should be 81 values passed out.
+	* I think I should do this differently for NN and MCTS.  Eventually, the NN will be sort of part of the MCTS, I think, it'll never run by itself.
+
+Resources
+	* AlphaZero architecture diagram: https://miro.medium.com/max/4000/1*0pn33bETjYOimWjlqDLLNw.png
