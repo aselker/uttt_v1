@@ -8,5 +8,19 @@ How to represent moves for MCTS and for NN?  Only some are valid.
 	* I think it'd be nice to represent a distribution over all possible moves, so there should be 81 values passed out.
 	* I think I should do this differently for NN and MCTS.  Eventually, the NN will be sort of part of the MCTS, I think, it'll never run by itself.
 
+NN structure concepts:
+	* AlphaZero has networks both suggest moves and predict how a game state is going.  Should I do that?
+		* You can pick a move by "trying" every move and seeing how the estimated states are.  Downsides: ~81x slower, and there might kind of be less signal.  E.g. if you're about to lose no matter what, there's little difference in state between moves.  Which could be fine I guess.
+	* Concept 0:
+		* A single network, from ixi to {single output or ixi}.  Every layer is fully-connected.
+	* Concept 1:
+		* 9 small networks, each coming from a cxc.  All weights are shared among the 9, and also the first few layers of each are symmetric (rotation and mirroring).  This is supposed to analyze each cxc, e.g. which moves are good.  Output is probably like 12 neurons.
+		* One large network, which takes inputs from the 9 smaller ones, and outputs {a single output or an ixi}.  Like the smaller ones, some weights are shared across rotation and mirroring.
+	* Concept 1.5: Same as Concept 1, but no weights are shared by rotation or mirroring.
+
+How to train?
+	* Option 0: Start out with normal self-play, as incompetent as it is.
+	* Option 1: Start out with ixi's filled randomly with X's and O's, so they're only a few moves from ending.
+
 Resources
 	* AlphaZero architecture diagram: https://miro.medium.com/max/4000/1*0pn33bETjYOimWjlqDLLNw.png

@@ -1,11 +1,13 @@
 import itertools
 import numpy as np
 
-# O = -1, blank = 0, X = 1
-
 
 def victory_state(board):
-    """Returns 0 for cat's game or incomplete, NaN for both win."""
+    """
+    Returns 0 for cat's game or both win, NaN for incomplete.
+
+    Var names assume that it's x's turn, but args and return are agnostic, use -1 and 1.
+    """
     h_sums = np.sum(board, axis=0)
     v_sums = np.sum(board, axis=1)
     sums = np.concatenate((h_sums, v_sums, [board[0, 0] + board[1, 1] + board[2, 2], board[2, 0] + board[1, 1] + board[0, 2]]))
@@ -14,11 +16,13 @@ def victory_state(board):
     x_wins = 3 in sums
 
     if x_wins and o_wins:
-        return np.nan
+        return 0.0
     elif x_wins:
         return 1.0
     elif o_wins:
         return -1.0
+    elif 0 in board:
+        return 0.0
     else:
         return 0.0
 
@@ -27,6 +31,7 @@ goodnesses = {}
 
 
 def calc_goodness(board):
+    raise ThisIsProbablyOutOfDateError
     key = board.tobytes()
     if key in goodnesses:
         return goodnesses[key]
