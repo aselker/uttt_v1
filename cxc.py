@@ -22,7 +22,7 @@ def victory_state(board):
     elif o_wins:
         return -1.0
     elif 0 in board:
-        return 0.0
+        return np.nan
     else:
         return 0.0
 
