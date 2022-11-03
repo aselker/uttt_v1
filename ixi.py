@@ -35,9 +35,12 @@ def pretty_print(ixi_, whose_turn="x"):
 
 
 def victory_state(ixi_):
-    # TODO: Check this.  cxc.victory_state isn't geared to deal with cells where nobody owns it and also nobody can play there.
     cxc_states = np.array([[cxc.victory_state(cxc_) for cxc_ in row] for row in ixi_])
-    cxc_states[np.isnan(cxc_states)], cxc_states[not cxc_states] = 0, np.nan
+    # Swap 0 and NaN, because they mean opposite things in input and output of victory_state.
+    to_nan = np.logical_not(cxc_states)
+    to_zero= np.isnan(cxc_states)
+    cxc_states[to_nan] = np.nan
+    cxc_states[to_zero] = 0
     return cxc.victory_state(cxc_states)
 
 
@@ -47,3 +50,10 @@ def hash(ixi_):
 
 def empty():
     return np.zeros((3, 3, 3, 3), dtype=np.int8)
+
+if __name__ == "__main__":
+    # ixi_ = np.zeros((3, 3, 3, 3), dtype=np.int8)
+    ixi_ = np.random.choice([-1, 0, 1], size=(3, 3, 3, 3))
+    print(pretty_print(ixi_))
+    print(np.array([[cxc.victory_state(cxc_) for cxc_ in row] for row in ixi_]))
+    print(victory_state(ixi_))

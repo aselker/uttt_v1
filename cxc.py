@@ -7,6 +7,9 @@ def victory_state(board):
     Returns 0 for cat's game or both win, NaN for incomplete.
 
     Var names assume that it's x's turn, but args and return are agnostic, use -1 and 1.
+
+    NaN is interpreted as neither own that square, but also nobody can play there.  Useful for feeding in cxc victory states.  Note
+    that that's sort of inverted from what the input is.
     """
     h_sums = np.sum(board, axis=0)
     v_sums = np.sum(board, axis=1)
