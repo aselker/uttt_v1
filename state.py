@@ -3,6 +3,7 @@ import itertools
 
 import cxc
 import ixi
+import utils
 
 # A move is a pair of (which cxc, move within cxc).  Each half is a pair of (horizontal index, vertical index).
 
@@ -13,13 +14,13 @@ class State:
         self.prev_move = prev_move
 
     def list_valid_moves(self):
-        if not np.isnan(ixi.victory_state(self.ixi)):
+        if ixi.victory_state(self.ixi):
             raise ValueError("Tring to list valid moves of a finished game")
 
-        if self.prev_move is not None and np.isnan(cxc.victory_state(self.ixi[self.prev_move[2:]])):
+        if self.prev_move is not None and not cxc.victory_state(self.ixi[self.prev_move[2:]]):
             valid_cxcs = [self.prev_move[2:]]
         else:
-            valid_cxcs = [indices for indices in itertools.product((0, 1, 2), repeat=2) if np.isnan(cxc.victory_state(self.ixi[indices]))]
+            valid_cxcs = [indices for indices in itertools.product((0, 1, 2), repeat=2) if not (cxc.victory_state(self.ixi[indices]))]
         # At this point, valid_cxcs should be exactly the cxcs where it's legal to play, i.e. nobody has won and it's not a cat's game.
         valid_moves = []
         # This nested loop/list comp could probably be replaced with a numpy expression.
@@ -42,4 +43,5 @@ class State:
         assert self.ixi[move] == 0, "Invalid move"
         self.ixi[move] = 1
         self.prev_move = move
-        self.ixi = -self.ixi  # Switch whose turn it is
+        # Switch whose turn it is: swap 1's and 2's.
+        utils.swap_players(self.ixi)
