@@ -2,9 +2,11 @@ import numpy as np
 import ixi
 import state
 import mcts
+import random
 
 
 def main():
+    random.seed(0)
     ixi_ = np.zeros((3, 3, 3, 3), dtype=np.int8)
     # ixi_ = np.random.choice([-1, 0, 1], size=(3, 3, 3, 3))
     print(ixi.pretty_print(ixi_))

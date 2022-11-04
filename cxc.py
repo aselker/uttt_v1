@@ -1,8 +1,10 @@
 import itertools
 import numpy as np
+import numba
 
 
-def victory_state(board):
+@numba.njit
+def _slow_victory_state(board):
     """
     Returns 0 for cat's game or both win, NaN for incomplete.
 
@@ -11,30 +13,57 @@ def victory_state(board):
     NaN is interpreted as neither own that square, but also nobody can play there.  Useful for feeding in cxc victory states.  Note
     that that's sort of inverted from what the input is.
     """
-    h_sums = np.sum(board, axis=0)
-    v_sums = np.sum(board, axis=1)
-    sums = np.concatenate((h_sums, v_sums, [board[0, 0] + board[1, 1] + board[2, 2], board[2, 0] + board[1, 1] + board[0, 2]]))
+    x_wins = (
+        (board[0, 0] == 1 and board[1, 0] == 1 and board[2, 0] == 1)
+        or (board[0, 1] == 1 and board[1, 1] == 1 and board[2, 1] == 1)
+        or (board[0, 2] == 1 and board[1, 2] == 1 and board[2, 2] == 1)
+        or (board[0, 0] == 1 and board[0, 1] == 1 and board[0, 2] == 1)
+        or (board[1, 0] == 1 and board[1, 1] == 1 and board[1, 2] == 1)
+        or (board[2, 0] == 1 and board[2, 1] == 1 and board[2, 2] == 1)
+        or (board[0, 0] == 1 and board[1, 1] == 1 and board[2, 2] == 1)
+        or (board[2, 0] == 1 and board[1, 1] == 1 and board[0, 2] == 1)
+    )
 
-    o_wins = -3 in sums
-    x_wins = 3 in sums
+    o_wins = (
+        (board[0, 0] == 2 and board[1, 0] == 2 and board[2, 0] == 2)
+        or (board[0, 1] == 2 and board[1, 1] == 2 and board[2, 1] == 2)
+        or (board[0, 2] == 2 and board[1, 2] == 2 and board[2, 2] == 2)
+        or (board[0, 0] == 2 and board[0, 1] == 2 and board[0, 2] == 2)
+        or (board[1, 0] == 2 and board[1, 1] == 2 and board[1, 2] == 2)
+        or (board[2, 0] == 2 and board[2, 1] == 2 and board[2, 2] == 2)
+        or (board[0, 0] == 2 and board[1, 1] == 2 and board[2, 2] == 2)
+        or (board[2, 0] == 2 and board[1, 1] == 2 and board[0, 2] == 2)
+    )
 
-    if x_wins and o_wins:
-        return 0.0
+    if (not x_wins) and (not o_wins):
+        if 0 in board:
+            return 3
+        return 0
     elif x_wins:
-        return 1.0
-    elif o_wins:
-        return -1.0
-    elif 0 in board:
-        return np.nan
-    else:
-        return 0.0
+        return 1
+    return 2
+
+
+_victory_lut = np.empty((4,) * 9, dtype=np.int8)
+
+
+def _lut_index_to_cxc(index):
+    return np.reshape(index, (3, 3))
+
+
+for index in itertools.product((0, 1, 2, 3), repeat=9):
+    _victory_lut[index] = _slow_victory_state(_lut_index_to_cxc(index))
+
+
+def victory_state(cxc_):
+    return _victory_lut[tuple(np.concatenate(cxc_))]
 
 
 goodnesses = {}
 
 
 def calc_goodness(board):
-    raise ThisIsProbablyOutOfDateError
+    raise NotImplementedError("whyyy")
     key = board.tobytes()
     if key in goodnesses:
         return goodnesses[key]
@@ -58,8 +87,26 @@ def calc_goodness(board):
 
 
 if __name__ == "__main__":
-    board = np.zeros((3, 3), dtype=np.int8)
-    board[0, 0] = 1
-    board[1, 1] = 1
-    board[2, 2] = -1
-    print(calc_goodness(board))
+    tests = [
+        (
+            [
+                [0, 0, 0],
+                [1, 1, 1],
+                [0, 0, 0],
+            ],
+            1,
+        ),
+        (
+            [
+                [2, 3, 1],
+                [0, 2, 0],
+                [1, 0, 2],
+            ],
+            2,
+        ),
+    ]
+
+    for test in tests:
+        vs = victory_state(test[0])
+        if vs != test[1]:
+            print("Failed:", test, "gives", vs)

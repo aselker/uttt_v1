@@ -11,13 +11,12 @@ import cxc
 
 
 def pretty_print(ixi_, whose_turn="x"):
-    match whose_turn:
-        case "x":
-            marks = {-1: "o", 0: " ", 1: "x"}
-        case "o":
-            marks = {1: "o", 0: " ", -1: "x"}
-        case _:
-            raise ValueError
+    if whose_turn == "x":
+        marks = {-1: "o", 0: " ", 1: "x"}
+    elif whose_turn == "o":
+        marks = {1: "o", 0: " ", -1: "x"}
+    else:
+        raise ValueError
 
     vline = "|"
     hline = "-"
