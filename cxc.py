@@ -37,8 +37,8 @@ def _slow_victory_state(board):
 
     if (not x_wins) and (not o_wins):
         if 0 in board:
-            return 3
-        return 0
+            return 0
+        return 3
     elif x_wins:
         return 1
     return 2
@@ -90,6 +90,14 @@ if __name__ == "__main__":
     tests = [
         (
             [
+                [1, 0, 0],
+                [1, 2, 1],
+                [2, 0, 0],
+            ],
+            0,
+        ),
+        (
+            [
                 [0, 0, 0],
                 [1, 1, 1],
                 [0, 0, 0],
@@ -103,6 +111,14 @@ if __name__ == "__main__":
                 [1, 0, 2],
             ],
             2,
+        ),
+        (
+            [
+                [2, 3, 1],
+                [1, 1, 2],
+                [2, 2, 1],
+            ],
+            3,
         ),
     ]
 
