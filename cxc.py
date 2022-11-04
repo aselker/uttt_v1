@@ -4,7 +4,7 @@ import numba
 
 
 @numba.njit
-def _slow_victory_state(board):
+def victory_state(board):
     x_wins = (
         (board[0, 0] == 1 and board[1, 0] == 1 and board[2, 0] == 1)
         or (board[0, 1] == 1 and board[1, 1] == 1 and board[2, 1] == 1)
