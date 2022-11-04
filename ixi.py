@@ -38,18 +38,19 @@ def victory_state(ixi_):
     cxc_states = np.array([[cxc.victory_state(cxc_) for cxc_ in row] for row in ixi_])
     # Swap 0 and NaN, because they mean opposite things in input and output of victory_state.
     to_nan = np.logical_not(cxc_states)
-    to_zero= np.isnan(cxc_states)
+    to_zero = np.isnan(cxc_states)
     cxc_states[to_nan] = np.nan
     cxc_states[to_zero] = 0
     return cxc.victory_state(cxc_states)
 
 
 def hash(ixi_):
-    return ixi.data.tobytes()
+    return ixi_.data.tobytes()
 
 
 def empty():
     return np.zeros((3, 3, 3, 3), dtype=np.int8)
+
 
 if __name__ == "__main__":
     # ixi_ = np.zeros((3, 3, 3, 3), dtype=np.int8)

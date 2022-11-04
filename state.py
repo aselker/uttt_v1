@@ -13,8 +13,11 @@ class State:
         self.prev_move = prev_move
 
     def list_valid_moves(self):
-        if self.prev_move is not None and np.isnan(cxc.victory_state(self.ixi[self.prev_move[1]])):
-            valid_cxcs = [self.prev_move[1]]
+        if not np.isnan(ixi.victory_state(self.ixi)):
+            raise ValueError("Tring to list valid moves of a finished game")
+
+        if self.prev_move is not None and np.isnan(cxc.victory_state(self.ixi[self.prev_move[2:]])):
+            valid_cxcs = [self.prev_move[2:]]
         else:
             valid_cxcs = [indices for indices in itertools.product((0, 1, 2), repeat=2) if np.isnan(cxc.victory_state(self.ixi[indices]))]
         # At this point, valid_cxcs should be exactly the cxcs where it's legal to play, i.e. nobody has won and it's not a cat's game.
@@ -26,13 +29,17 @@ class State:
             ]
         return valid_moves
 
+    def __hash__(self):
+        return hash((ixi.hash(self.ixi), self.prev_move))
 
-if __name__ == "__main__":
-    # ixi_ = np.zeros((3, 3, 3, 3), dtype=np.int8)
-    ixi_ = np.random.choice([-1, 0, 1], size=(3, 3, 3, 3))
-    print(ixi.pretty_print(ixi_))
-    state = State(ixi_=ixi_)
-    valid_moves = state.list_valid_moves()
-    print(len(valid_moves))
-    print(valid_moves)
-    breakpoint()
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def victory_state(self):
+        return ixi.victory_state(self.ixi)
+
+    def move(self, move):
+        assert self.ixi[move] == 0, "Invalid move"
+        self.ixi[move] = 1
+        self.prev_move = move
+        self.ixi = -self.ixi  # Switch whose turn it is
