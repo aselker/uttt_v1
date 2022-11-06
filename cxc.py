@@ -27,9 +27,12 @@ def victory_state(board):
         or (board[2, 0] == 2 and board[1, 1] == 2 and board[0, 2] == 2)
     )
 
+    # Sort of awkward logic, to make the most-common case (nobody wins, game still going) the fastest.
     if (not x_wins) and (not o_wins):
         if 0 in board:
             return 0
+        return 3
+    elif x_wins and o_wins:
         return 3
     elif x_wins:
         return 1
@@ -37,7 +40,7 @@ def victory_state(board):
 
 
 if False:  # Cache victory states
-    _victory_lut = np.empty((4,) * 9, dtype=np.int8)
+    _victory_lut = np.empty((4,) * 9, dtype=np.uint8)
 
     def _lut_index_to_cxc(index):
         return np.reshape(index, (3, 3))

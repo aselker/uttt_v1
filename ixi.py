@@ -43,11 +43,11 @@ def hash(ixi_):
 
 
 def empty():
-    return np.zeros((3, 3, 3, 3), dtype=np.int8)
+    return np.zeros((3, 3, 3, 3), dtype=np.uint8)
 
 
 if __name__ == "__main__":
-    # ixi_ = np.zeros((3, 3, 3, 3), dtype=np.int8)
+    # ixi_ = np.zeros((3, 3, 3, 3), dtype=np.uint8)
     ixi_ = np.random.choice([0, 1, 2], size=(3, 3, 3, 3))
     print(pretty_print(ixi_))
     print(np.array([[cxc.victory_state(cxc_) for cxc_ in row] for row in ixi_]))

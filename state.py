@@ -45,3 +45,6 @@ class State:
         self.prev_move = move
         # Switch whose turn it is: swap 1's and 2's.
         utils.swap_players(self.ixi)
+
+    def __str__(self):
+        return "Last move: " + str(self.prev_move) + "\n" + ixi.pretty_print(self.ixi)
