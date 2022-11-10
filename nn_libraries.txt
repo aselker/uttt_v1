@@ -1,0 +1,3 @@
+Installed tensorflow-cpu with pip, it seems to work.  I think the pakcage called tensorflow wants a GPU.
+
+I'll use Colab for high-performance stuff.

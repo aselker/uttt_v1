@@ -1,4 +1,3 @@
-from copy import deepcopy
 import numpy as np
 import state
 import utils
@@ -36,7 +35,7 @@ class Mcts:
         )
 
     def run_playout(self, state_):
-        state_ = deepcopy(state_)
+        state_ = state_.copy()
         old_hashes = [hash(state_)]
         victory_state = state_.victory_state()
         while not victory_state:

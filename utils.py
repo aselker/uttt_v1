@@ -3,7 +3,7 @@ import numpy as np
 
 def swap_players(x):
     """Edits the passed-in array!"""
-    if np.isscalar(x):
+    if isinstance(x, int):
         if x == 2:
             return 1
         elif x == 1:

@@ -1,0 +1,25 @@
+cxc.victory_state() is very much on the fast path.  How to make it faster?
+	* Numba might actually be the right call here
+	* Make a lookup table??? There's 3**9 = 19683 possible cxc's.  Do it.
+	* Done.  It's faster, but still slow; unfortunately the LUT is a bit more complex than I'd hoped.
+		* It has to deal with NaN values.  Maybe instead of NaN, we should use 64 to mean "undefined as of yet".  int8 is half as big as float16.  But might not be any faster because of word alignment etc.
+		* Also, cleverer way of accessing it than concatenating.  Maybe just a dict keyed on cxc_.data.tobytes()?
+	* Try njit vs. LUT
+		* njit is a bit faster, I think.  I'll use it for now.
+
+
+Re-arranging things.
+	* 0 = empty space, or incomplete game.
+	* 1 = X has played here / wins
+	* 2 = O has played here / wins
+	* 3 = Tie, or both win
+
+Switch from 3.10 to 3.11
+
+Reduce deepcopy() by having the MCTS cache be by hash - Done, looks like it helped a lot!
+	* I think deepcopy() is quite slow - does it use Pickle?
+
+TODO:
+	* Make a function equivalent to bool(victory_state)
+	* Maybe cache some victory states in a State?  Like, only reclaculate the cxc that was touched, and maybe only look at the possible-lines that were touched by that cxc.  Or just don't re-evaluate the whole-ixi victory state if the cxc hasn't changed its victory state.
+	* Try getting rid of the MCTS cache
