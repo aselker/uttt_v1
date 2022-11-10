@@ -28,7 +28,7 @@ class Mcts:
         if hash_state not in self.cache:
             self.cache[hash_state] = (0.0, 0)
 
-        value_to_add = {3: 0, 1: 1, 2: -1}[victory_state]
+        value_to_add = {2: 0, 1: 1, -1: -1}[victory_state]
         self.cache[hash_state] = (
             (self.cache[hash_state][0] * self.cache[hash_state][1] + value_to_add) / (self.cache[hash_state][1] + 1),
             self.cache[hash_state][1] + 1,

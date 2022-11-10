@@ -7,7 +7,7 @@ from mcts import Mcts
 from state import State
 import ixi
 
-NUM_GAMES = 100
+NUM_GAMES = 8
 NUM_PLAYOUTS = 200
 NUM_PREFILLED_EACH = 30
 
@@ -24,15 +24,15 @@ def main():
         # Generate a game that's mostly full
         victory_state = 1
         while victory_state:
-            to_sample = [1] * NUM_PREFILLED_EACH + [2] * NUM_PREFILLED_EACH + [0] * (81 - 2 * NUM_PREFILLED_EACH)
-            to_sample = np.array(to_sample, dtype=np.uint8)
+            to_sample = [1] * NUM_PREFILLED_EACH + [-1] * NUM_PREFILLED_EACH + [0] * (81 - 2 * NUM_PREFILLED_EACH)
+            to_sample = np.array(to_sample, dtype=np.int8)
             if np.random.choice([0, 1]):
-                to_sample[-1] = 2
+                to_sample[-1] = -1 
             np.random.shuffle(to_sample)
             ixi_ = to_sample.reshape((3, 3, 3, 3))
             victory_state = ixi.victory_state(ixi_)
 
-        possible_prev_moves = np.transpose((ixi_ == 2).nonzero())
+        possible_prev_moves = np.transpose((ixi_ == -1).nonzero())
         prev_move = tuple(possible_prev_moves[np.random.randint(len(possible_prev_moves))])
         state_ = State(ixi_, prev_move)
 

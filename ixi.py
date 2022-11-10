@@ -12,9 +12,9 @@ import cxc
 
 def pretty_print(ixi_, whose_turn="x"):
     if whose_turn == "x":
-        marks = {0: " ", 1: "x", 2: "o", 3: "?"}
+        marks = {0: " ", 1: "x", -1: "o", 2: "?"}
     elif whose_turn == "o":
-        marks = {0: " ", 1: "o", 2: "x", 3: "?"}
+        marks = {0: " ", 1: "o", -1: "x", 2: "?"}
     else:
         raise ValueError
 
@@ -43,12 +43,12 @@ def hash(ixi_):
 
 
 def empty():
-    return np.zeros((3, 3, 3, 3), dtype=np.uint8)
+    return np.zeros((3, 3, 3, 3), dtype=np.int8)
 
 
 if __name__ == "__main__":
-    # ixi_ = np.zeros((3, 3, 3, 3), dtype=np.uint8)
-    ixi_ = np.random.choice([0, 1, 2], size=(3, 3, 3, 3))
+    # ixi_ = np.zeros((3, 3, 3, 3), dtype=np.int8)
+    ixi_ = np.random.choice([0, 1, -1], size=(3, 3, 3, 3))
     print(pretty_print(ixi_))
     print(np.array([[cxc.victory_state(cxc_) for cxc_ in row] for row in ixi_]))
     print(victory_state(ixi_))
