@@ -12,7 +12,7 @@ class Mcts:
     def get_value(self, state_):
         victory_state = state_.victory_state()
         if victory_state:
-            return victory_state
+            return {2: 0, 1: 1, -1: -1}[victory_state]
         self.run_playouts(state_)
         return self.cache[hash(state_)][0]
 

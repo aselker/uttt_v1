@@ -10,6 +10,7 @@ import ixi
 NUM_GAMES = 8
 NUM_PLAYOUTS = 200
 NUM_PREFILLED_EACH = 30
+SOMETIMES_UNEQUAL = False
 
 
 def main():
@@ -21,14 +22,14 @@ def main():
 
     histories = [[] for _ in range(NUM_GAMES)]
     for game_index in range(NUM_GAMES):
-        print("Game", game_index, "...")
+        # print("Game", game_index, "...")
         # Generate a game that's mostly full
         victory_state = 1
         while victory_state:
             to_sample = [1] * NUM_PREFILLED_EACH + [-1] * NUM_PREFILLED_EACH + [0] * (81 - 2 * NUM_PREFILLED_EACH)
             to_sample = np.array(to_sample, dtype=np.int8)
-            if np.random.choice([0, 1]):
-                to_sample[-1] = -1 
+            if SOMETIMES_UNEQUAL and np.random.choice([0, 1]):
+                to_sample[-1] = -1
             np.random.shuffle(to_sample)
             ixi_ = to_sample.reshape((3, 3, 3, 3))
             victory_state = ixi.victory_state(ixi_)
@@ -55,14 +56,15 @@ def main():
             victory_state = state_.victory_state()
             if victory_state:
                 if victory_state == 2:
-                    print("After", turn_index, "moves, draw.")
+                    # print("After", turn_index, "moves, draw.")
                     draw_total += 1
                 else:
-                    print("After", turn_index, "moves,", ("odd" if turn_index % 2 else "even"), "won.")
+                    # print("After", turn_index, "moves,", ("odd" if turn_index % 2 else "even"), "won.")
                     if turn_index % 2:
                         odd_total += 1
                     else:
                         even_total += 1
+                histories[game_index].append(state_.copy())
                 break
 
     print(f"{even_total=}, {odd_total=}, {draw_total=}")

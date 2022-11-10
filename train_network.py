@@ -12,11 +12,6 @@ def main():
         with open(sys.argv[1], "rb") as f:
             histories += pickle.load(f)
 
-    # XXX
-    print(len([h for h in histories if len(h) % 2]))
-    print(len([h for h in histories if len(h) % 2 == 0]))
-    breakpoint()
-
     all_pairs = []
     for history in histories:
         eventual_victory_state = history[-1].victory_state()

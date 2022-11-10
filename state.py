@@ -47,7 +47,7 @@ class State:
         utils.swap_players(self.ixi)
 
     def __str__(self):
-        return "Last move: " + str(self.prev_move) + "\n" + ixi.pretty_print(self.ixi)
+        return ixi.pretty_print(self.ixi, prev_move=self.prev_move)
 
     def copy(self):
         return type(self)(ixi_ = np.copy(self.ixi), prev_move=self.prev_move)
