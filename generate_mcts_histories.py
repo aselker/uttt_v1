@@ -17,6 +17,7 @@ def main():
 
     even_total = 0
     odd_total = 0
+    draw_total = 0
 
     histories = [[] for _ in range(NUM_GAMES)]
     for game_index in range(NUM_GAMES):
@@ -53,14 +54,18 @@ def main():
             state_.move(possible_moves[np.argmax(values)])
             victory_state = state_.victory_state()
             if victory_state:
-                print("After", turn_index, "moves,", ("odd" if turn_index % 2 else "even"), "won.")
-                if turn_index % 2:
-                    odd_total += 1
+                if victory_state == 2:
+                    print("After", turn_index, "moves, draw.")
+                    draw_total += 1
                 else:
-                    even_total += 1
+                    print("After", turn_index, "moves,", ("odd" if turn_index % 2 else "even"), "won.")
+                    if turn_index % 2:
+                        odd_total += 1
+                    else:
+                        even_total += 1
                 break
 
-    print(f"{even_total=}, {odd_total=}")
+    print(f"{even_total=}, {odd_total=}, {draw_total=}")
 
     with open(sys.argv[1], "wb") as f:
         pickle.dump(histories, f)
