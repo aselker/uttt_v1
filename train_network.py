@@ -34,16 +34,26 @@ def main():
     test_inputs = np.array([pair[0] for pair in test_pairs])
     test_outputs = np.array([pair[1] for pair in test_pairs])
 
+    # ugggggh
+    train_inputs = train_inputs.reshape(-1, 81)
+    test_inputs = test_inputs.reshape(-1, 81)
+
+    # For consistency, outputs are 1-lists.
+    train_outputs = train_outputs[:, np.newaxis]
+    test_outputs = test_outputs[:, np.newaxis]
+
+    print(len(train_pairs), "train pairs,", len(test_pairs), "test pairs")
+
     model = keras.models.Sequential(
         [
-            keras.layers.Dense(81, activation="relu", use_bias=True, input_shape=(3, 3, 3, 3)),
-            keras.layers.Dense(81, activation="relu", use_bias=True),
-            keras.layers.Dense(81, activation="relu", use_bias=True),
-            keras.layers.Dense(81, activation="relu", use_bias=True),
-            keras.layers.Dense(81, activation="relu", use_bias=True),
-            keras.layers.Dense(81, activation="relu", use_bias=True),
-            keras.layers.Dense(81, activation="relu", use_bias=True),
-            keras.layers.Dense(1, activation=None),
+            keras.layers.Dense(81, activation="relu", input_shape=(81,)),
+            keras.layers.Dense(81, activation="relu"),
+            keras.layers.Dense(81, activation="relu"),
+            keras.layers.Dense(81, activation="relu"),
+            keras.layers.Dense(81, activation="relu"),
+            keras.layers.Dense(81, activation="relu"),
+            keras.layers.Dense(81, activation="relu"),
+            keras.layers.Dense(1, activation="sigmoid"),
         ]
     )
     model.compile(
@@ -52,12 +62,24 @@ def main():
         metrics=["accuracy"],
     )
 
+    model.evaluate(
+        test_inputs,
+        test_outputs,
+    )
+
     model.fit(
         train_inputs,
         train_outputs,
-        epochs=1024,
-        batch_size=32,
+        epochs=64,
+        batch_size=64,
     )
+
+    model.evaluate(
+        test_inputs,
+        test_outputs,
+    )
+
+    print(model.predict(train_inputs[:1]))
 
 
 if __name__ == "__main__":
