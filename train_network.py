@@ -19,30 +19,26 @@ def main():
     for history in histories:
         eventual_victory_state = history[-1].victory_state()
         assert eventual_victory_state, "Game ended without someone winning?"
-        if eventual_victory_state == 3:
+        if eventual_victory_state == 2:
             eventual_victory_state = 0
         for state_index, state_ in enumerate(history):
             # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
             value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
-            all_pairs.append((state_.ixi, eventual_victory_state))
+            all_pairs.append((state_.ixi, value))
 
     np.random.shuffle(all_pairs)  # for plausible deniability
-    train_pairs = all_pairs[: int(len(all_pairs) * (1 - TEST_PORTION))]
-    test_pairs = all_pairs[int(len(all_pairs) * (1 - TEST_PORTION)) :]
-    train_inputs = np.array([pair[0] for pair in train_pairs])
-    train_outputs = np.array([pair[1] for pair in train_pairs])
-    test_inputs = np.array([pair[0] for pair in test_pairs])
-    test_outputs = np.array([pair[1] for pair in test_pairs])
+    all_inputs = np.array([pair[0] for pair in all_pairs])
+    all_outputs = np.array([pair[1] for pair in all_pairs])
+    all_inputs = all_inputs.reshape(-1, 81)  # Flatten inputs.  For now.
+    # all_outputs[all_outputs == 2] = 0  # Instead of 2 for tie, use 0, so it's between win and loss.
+    all_outputs = all_outputs[:, np.newaxis] # For consistency, outputs are 1-lists.
 
-    # ugggggh
-    train_inputs = train_inputs.reshape(-1, 81)
-    test_inputs = test_inputs.reshape(-1, 81)
-
-    # For consistency, outputs are 1-lists.
-    train_outputs = train_outputs[:, np.newaxis]
-    test_outputs = test_outputs[:, np.newaxis]
-
-    print(len(train_pairs), "train pairs,", len(test_pairs), "test pairs")
+    # Split into train and test
+    train_inputs = all_inputs[: int(len(all_inputs) * (1 - TEST_PORTION))]
+    test_inputs = all_inputs[int(len(all_inputs) * (1 - TEST_PORTION)) :]
+    train_outputs = all_outputs[: int(len(all_outputs) * (1 - TEST_PORTION))]
+    test_outputs = all_outputs[int(len(all_outputs) * (1 - TEST_PORTION)) :]
+    print(len(train_inputs), "train pairs,", len(test_inputs), "test pairs")
 
     model = keras.models.Sequential(
         [
@@ -53,13 +49,12 @@ def main():
             keras.layers.Dense(81, activation="relu"),
             keras.layers.Dense(81, activation="relu"),
             keras.layers.Dense(81, activation="relu"),
-            keras.layers.Dense(1, activation="sigmoid"),
+            keras.layers.Dense(1, activation="tanh"),
         ]
     )
     model.compile(
         optimizer="adam",
         loss="mean_squared_error",
-        metrics=["accuracy"],
     )
 
     model.evaluate(
@@ -74,12 +69,18 @@ def main():
         batch_size=64,
     )
 
+    print("Test:")
     model.evaluate(
         test_inputs,
         test_outputs,
     )
 
-    print(model.predict(train_inputs[:1]))
+    print("Example train predictions:")
+    print(model.predict(train_inputs[:15]))
+    print(train_outputs[:15])
+    print("Example test predictions:")
+    print(model.predict(test_inputs[:15]))
+    print(test_outputs[:15])
 
 
 if __name__ == "__main__":
