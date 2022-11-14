@@ -31,7 +31,7 @@ def main():
     all_outputs = np.array([pair[1] for pair in all_pairs])
     all_inputs = all_inputs.reshape(-1, 81)  # Flatten inputs.  For now.
     # all_outputs[all_outputs == 2] = 0  # Instead of 2 for tie, use 0, so it's between win and loss.
-    all_outputs = all_outputs[:, np.newaxis] # For consistency, outputs are 1-lists.
+    all_outputs = all_outputs[:, np.newaxis]  # For consistency, outputs are 1-lists.
 
     # Split into train and test
     train_inputs = all_inputs[: int(len(all_inputs) * (1 - TEST_PORTION))]
@@ -75,12 +75,15 @@ def main():
         test_outputs,
     )
 
-    print("Example train predictions:")
-    print(model.predict(train_inputs[:15]))
-    print(train_outputs[:15])
-    print("Example test predictions:")
-    print(model.predict(test_inputs[:15]))
-    print(test_outputs[:15])
+    if False:  # Print some specific predictions
+        print("Example test predictions:")
+        preds = model.predict(test_inputs[:30])
+        for pred, output in zip(preds, test_outputs):
+            print(pred, pred.round(), output)
+        res = preds.round().astype(int) == test_outputs[: len(preds)]
+        print(np.mean(res))
+
+    model.save_weights("model.h5")
 
 
 if __name__ == "__main__":
