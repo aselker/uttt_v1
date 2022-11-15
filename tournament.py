@@ -6,14 +6,14 @@ import itertools
 from state import State
 import ixi
 
-from mcts import MctsBot
+from mcts import MctsBot, SimpleNnBot
 
 """
 Round-robin tournament.
 """
 
 NUM_GAMES_PER_MATCHUP = 8
-NUM_PREFILLED_EACH = 30
+NUM_PREFILLED_EACH = 20
 SOMETIMES_UNEQUAL = False
 
 
@@ -38,7 +38,8 @@ def generate_partially_full_state():
 def main():
     assert len(sys.argv) == 2
 
-    bots = [MctsBot(200), MctsBot(100), MctsBot(30)]
+    # bots = [MctsBot(200), MctsBot(100), MctsBot(30)]
+    bots = [MctsBot(50), SimpleNnBot("model.h5")]
 
     # Make sure names are unique
     assert len([bot.name for bot in bots]) == len({bot.name for bot in bots})
@@ -70,6 +71,7 @@ def main():
                     break
 
     with open(sys.argv[1], "wb") as f:
+        # pickle.dump([h[1] for h in histories], f)
         pickle.dump(histories, f)
 
     # Calculate and display tournament results.

@@ -1,6 +1,7 @@
 import numpy as np
 import state
 import utils
+from nn_common import make_model
 
 
 class Mcts:
@@ -51,10 +52,10 @@ class Mcts:
             self.update_cache(old_hash, utils.swap_players(victory_state))
 
 
-class MctsBot:
-    def __init__(self, num_playouts=100):
-        self.mcts = Mcts(num_playouts=num_playouts)
-        self.name = "MctsBot" + str(num_playouts)
+class ValueFunctionBot:
+    def __init__(self, value_function, name):
+        self.value_function = value_function
+        self.name = name
 
     def get_move(self, state_):
         possible_moves = state_.list_valid_moves()
@@ -62,7 +63,25 @@ class MctsBot:
         for possible_move in possible_moves:
             possible_state = state_.copy()
             possible_state.move(possible_move)
-            value = self.mcts.get_value(possible_state)
+            value = self.value_function(possible_state)
             value = -value  # Because we want to leave the next player in the worst-possible state
             values.append(value)
         return possible_moves[np.argmax(values)]
+
+
+class MctsBot(ValueFunctionBot):
+    def __init__(self, num_playouts=100):
+        self.mcts = Mcts(num_playouts=num_playouts)
+        name = "MctsBot" + str(num_playouts)
+        super().__init__(self.mcts.get_value, name)
+
+
+class SimpleNnBot(ValueFunctionBot):
+    def __init__(self, filename):
+        self.nn = make_model()
+        self.nn.load_weights(filename)
+
+        def value_function(state_):
+            return self.nn.predict(state_.ixi.reshape(1, 81), verbose=False)[0]
+
+        super().__init__(value_function, "SimpleNnBot_" + filename)

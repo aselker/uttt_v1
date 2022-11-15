@@ -2,6 +2,7 @@ import os
 import sys
 import pickle
 import numpy as np
+from nn_common import make_model
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 from tensorflow import keras
@@ -17,6 +18,9 @@ def main():
 
     all_pairs = []
     for history in histories:
+        # sEmAnTiC vErSiOnInG
+        if len(history) == 2 and isinstance(history[0], tuple):
+            history = history[1]
         eventual_victory_state = history[-1].victory_state()
         assert eventual_victory_state, "Game ended without someone winning?"
         if eventual_victory_state == 2:
@@ -30,7 +34,6 @@ def main():
     all_inputs = np.array([pair[0] for pair in all_pairs])
     all_outputs = np.array([pair[1] for pair in all_pairs])
     all_inputs = all_inputs.reshape(-1, 81)  # Flatten inputs.  For now.
-    # all_outputs[all_outputs == 2] = 0  # Instead of 2 for tie, use 0, so it's between win and loss.
     all_outputs = all_outputs[:, np.newaxis]  # For consistency, outputs are 1-lists.
 
     # Split into train and test
@@ -40,18 +43,8 @@ def main():
     test_outputs = all_outputs[int(len(all_outputs) * (1 - TEST_PORTION)) :]
     print(len(train_inputs), "train pairs,", len(test_inputs), "test pairs")
 
-    model = keras.models.Sequential(
-        [
-            keras.layers.Dense(81, activation="relu", input_shape=(81,)),
-            keras.layers.Dense(81, activation="relu"),
-            keras.layers.Dense(81, activation="relu"),
-            keras.layers.Dense(81, activation="relu"),
-            keras.layers.Dense(81, activation="relu"),
-            keras.layers.Dense(81, activation="relu"),
-            keras.layers.Dense(81, activation="relu"),
-            keras.layers.Dense(1, activation="tanh"),
-        ]
-    )
+    model = make_model()
+
     model.compile(
         optimizer="adam",
         loss="mean_squared_error",
