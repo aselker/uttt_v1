@@ -32,7 +32,7 @@ def generate_partially_full_state():
         possible_prev_moves = np.transpose((ixi_ == -1).nonzero())
         prev_move = tuple(possible_prev_moves[np.random.randint(len(possible_prev_moves))])
         state_ = State(ixi_, prev_move)
-        return state_
+    return state_
 
 
 def main():
@@ -40,11 +40,15 @@ def main():
 
     bots = [MctsBot(200), MctsBot(100), MctsBot(30)]
 
+    # Make sure names are unique
+    assert len([bot.name for bot in bots]) == len({bot.name for bot in bots})
+
+    # All pairs, in alphabetical order
     matchups = list(itertools.combinations(bots, 2))
+
+    # Play the round robin
     histories = []
-    tournament_results = {}
     for bot1, bot2 in matchups:
-        tournament_results[(bot1.name, bot2.name)] = (0, 0, 0)  # bot1, bot2, draw
 
         for game_index in range(NUM_GAMES_PER_MATCHUP):
             if game_index % 2:
@@ -54,22 +58,45 @@ def main():
                 even_bot = bot2
                 odd_bot = bot1
 
-            history = ((even_bot.name, odd_bot.name), [])
+            state_ = generate_partially_full_state()
+            history = ((even_bot.name, odd_bot.name), [state_.copy()])
             histories.append(history)
 
             for turn_index in itertools.count():
+                state_.move((odd_bot if turn_index % 2 else even_bot).get_move(state_))
                 history[1].append(state_.copy())
-                state_.move((odd_bot if turn_index % 2 else even_bot).get_move())
-
                 victory_state = state_.victory_state()
                 if victory_state:
-                    history[1].append(state_.copy())
                     break
-
-    # TODO: Print results
 
     with open(sys.argv[1], "wb") as f:
         pickle.dump(histories, f)
+
+    # Calculate and display tournament results.
+    # There's gotta be a better way to do this.  A dict isn't quite the right data structure.  Or maybe tournament_results should map from every pairing including duplicates.
+    tournament_results = {(bot1.name, bot2.name): [0, 0, 0] for bot1, bot2 in matchups}
+    for history in histories:
+        even_name, odd_name = history[0]
+        if (even_name, odd_name) in tournament_results:
+            relevant_results = tournament_results[(even_name, odd_name)]
+            swap = False
+        else:
+            relevant_results = tournament_results[(odd_name, even_name)]
+            swap = True
+
+        if history[1][-1].victory_state() == 2:
+            relevant_results[2] += 1
+        elif len(history) % 2:
+            if swap:
+                relevant_results[0] += 1
+            else:
+                relevant_results[1] += 1
+        else:
+            if swap:
+                relevant_results[1] += 1
+            else:
+                relevant_results[0] += 1
+    print(tournament_results)
 
 
 if __name__ == "__main__":
