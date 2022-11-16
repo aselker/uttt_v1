@@ -12,8 +12,8 @@ TEST_PORTION = 0.1
 
 def main():
     histories = []
-    for filename in sys.argv[1:]:
-        with open(sys.argv[1], "rb") as f:
+    for filename in sys.argv[2:]:
+        with open(filename, "rb") as f:
             histories += pickle.load(f)
 
     all_pairs = []
@@ -58,8 +58,8 @@ def main():
     model.fit(
         train_inputs,
         train_outputs,
-        epochs=64,
-        batch_size=64,
+        epochs=72,
+        batch_size=256,
     )
 
     print("Test:")
@@ -68,15 +68,15 @@ def main():
         test_outputs,
     )
 
-    if False:  # Print some specific predictions
+    if True:  # Print some specific predictions
         print("Example test predictions:")
-        preds = model.predict(test_inputs[:30])
+        preds = model.predict(test_inputs[:32])
         for pred, output in zip(preds, test_outputs):
             print(pred, pred.round(), output)
         res = preds.round().astype(int) == test_outputs[: len(preds)]
         print(np.mean(res))
 
-    model.save_weights("model.h5")
+    model.save_weights(sys.argv[1])
 
 
 if __name__ == "__main__":
