@@ -13,7 +13,7 @@ TEST_PORTION = 0.05
 
 
 def loss(y_true, y_pred):
-    return keras.losses.binary_crossentropy(from_logits=False, y_true=(y_true+1)/2, y_pred=(y_pred-1)/2)
+    return keras.losses.binary_crossentropy(from_logits=False, y_true=(y_true + 1.0) / 2.0, y_pred=(y_pred + 1.0) / 2.0)
 
 
 def main():
