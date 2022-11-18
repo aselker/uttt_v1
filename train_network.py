@@ -31,6 +31,7 @@ def main():
         assert eventual_victory_state, "Game ended without someone winning?"
         if eventual_victory_state == 2:
             eventual_victory_state = 0
+        eventual_victory_state = float(eventual_victory_state)
         for state_index, state_ in enumerate(history):
             # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
             value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
