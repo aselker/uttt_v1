@@ -39,18 +39,18 @@ def generate_partially_full_state():
 def main():
     assert len(sys.argv) == 2
 
-    bots = [MctsBot(30), MctsBot(35)]
-    # bots = [MctsBot(50), SimpleNnBot("model.h5")]
-    # bots = [SimpleNnBot("model.h5"), SimpleNnBot("model.h5")]
-    # bots[1].name += "_the_other"
-
-    # Make sure names are unique
-    assert len([bot.name for bot in bots]) == len({bot.name for bot in bots})
-
-    # All pairs, in alphabetical order
-    matchups = list(itertools.combinations(bots, 2))
-
     for epoch in itertools.count():
+        bots = [MctsBot(30), MctsBot(35)]
+        # bots = [MctsBot(50), SimpleNnBot("model.h5")]
+        # bots = [SimpleNnBot("model.h5"), SimpleNnBot("model.h5")]
+        # bots[1].name += "_the_other"
+
+        # Make sure names are unique
+        assert len([bot.name for bot in bots]) == len({bot.name for bot in bots})
+
+        # All pairs, in alphabetical order
+        matchups = list(itertools.combinations(bots, 2))
+
         # Play the round robin
         histories = []
         for bot1, bot2 in matchups:
