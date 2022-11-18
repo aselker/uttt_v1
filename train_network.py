@@ -12,6 +12,10 @@ from tensorflow import keras
 TEST_PORTION = 0.05
 
 
+def loss(y_true, y_pred):
+    return keras.losses.binary_crossentropy(from_logits=False, y_true=(y_true+1)/2, y_pred=(y_pred-1)/2)
+
+
 def main():
     histories = []
     for filename in sys.argv[2:]:
@@ -49,7 +53,7 @@ def main():
 
     model.compile(
         optimizer="adam",
-        loss="mean_squared_error",
+        loss=loss,
     )
 
     history = model.fit(
