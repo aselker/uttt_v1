@@ -7,9 +7,9 @@ from mcts import Mcts
 from state import State
 import ixi
 
-NUM_GAMES = 8
-NUM_PLAYOUTS = 200
-NUM_PREFILLED_EACH = 30
+NUM_GAMES = 512
+NUM_PLAYOUTS = 1024
+NUM_PREFILLED_EACH = 25
 SOMETIMES_UNEQUAL = False
 
 

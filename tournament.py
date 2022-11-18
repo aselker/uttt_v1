@@ -12,8 +12,8 @@ from mcts import MctsBot, SimpleNnBot
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 32
-NUM_PREFILLED_EACH = 20
+NUM_GAMES_PER_MATCHUP = 256
+NUM_PREFILLED_EACH = 18
 SOMETIMES_UNEQUAL = False
 
 
@@ -38,8 +38,7 @@ def generate_partially_full_state():
 def main():
     assert len(sys.argv) == 2
 
-    # bots = [MctsBot(200), MctsBot(100), MctsBot(30)]
-    bots = [MctsBot(20), MctsBot(25)]
+    bots = [MctsBot(30), MctsBot(35)]
     # bots = [MctsBot(50), SimpleNnBot("model.h5")]
 
     # Make sure names are unique

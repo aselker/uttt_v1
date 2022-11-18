@@ -2,12 +2,14 @@ import os
 import sys
 import pickle
 import numpy as np
+import matplotlib.pyplot as plt
+
 from nn_common import make_model
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 from tensorflow import keras
 
-TEST_PORTION = 0.1
+TEST_PORTION = 0.05
 
 
 def main():
@@ -50,17 +52,19 @@ def main():
         loss="mean_squared_error",
     )
 
-    model.evaluate(
-        test_inputs,
-        test_outputs,
-    )
-
-    model.fit(
+    history = model.fit(
         train_inputs,
         train_outputs,
-        epochs=72,
-        batch_size=256,
+        epochs=64,
+        batch_size=16384,
+        validation_split=0.1,
     )
+
+    model.save_weights(sys.argv[1])
+
+    plt.plot(history.history["loss"])
+    plt.plot(history.history["val_loss"])
+    plt.show()
 
     print("Test:")
     model.evaluate(
@@ -75,8 +79,6 @@ def main():
             print(pred, pred.round(), output)
         res = preds.round().astype(int) == test_outputs[: len(preds)]
         print(np.mean(res))
-
-    model.save_weights(sys.argv[1])
 
 
 if __name__ == "__main__":
