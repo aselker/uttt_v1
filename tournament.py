@@ -13,8 +13,8 @@ from mcts import MctsBot, SimpleNnBot, RandomBot
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 16
-NUM_PREFILLED_EACH = 30
+NUM_GAMES_PER_MATCHUP = 8
+NUM_PREFILLED_EACH = 20
 SOMETIMES_UNEQUAL = False
 
 
