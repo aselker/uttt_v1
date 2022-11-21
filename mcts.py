@@ -82,6 +82,15 @@ class SimpleNnBot(ValueFunctionBot):
         self.nn.load_weights(filename)
 
         def value_function(state_):
-            return self.nn.predict(state_.ixi.reshape(1, 81), verbose=False)[0]
+            return self.nn.predict(state_.ixi, verbose=False)[0]
 
         super().__init__(value_function, "SimpleNnBot_" + filename)
+
+
+class RandomBot:
+    def __init__(self):
+        self.name = "RandomBot"
+
+    def get_move(self, state_):
+        possible_moves = state_.list_valid_moves()
+        return possible_moves[np.random.choice(range(len(possible_moves)))]

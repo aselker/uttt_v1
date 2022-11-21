@@ -7,14 +7,14 @@ from pathlib import Path
 from state import State
 import ixi
 
-from mcts import MctsBot, SimpleNnBot
+from mcts import MctsBot, SimpleNnBot, RandomBot
 
 """
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 4
-NUM_PREFILLED_EACH = 18
+NUM_GAMES_PER_MATCHUP = 16
+NUM_PREFILLED_EACH = 30
 SOMETIMES_UNEQUAL = False
 
 
@@ -41,7 +41,7 @@ def main():
 
     for epoch in itertools.count():
         bots = [MctsBot(30), MctsBot(35)]
-        # bots = [MctsBot(50), SimpleNnBot("model.h5")]
+        # bots = [MctsBot(30), SimpleNnBot("model.h5"), RandomBot()]
         # bots = [SimpleNnBot("model.h5"), SimpleNnBot("model.h5")]
         # bots[1].name += "_the_other"
 

@@ -40,7 +40,7 @@ def main():
     np.random.shuffle(all_pairs)  # for plausible deniability
     all_inputs = np.array([pair[0] for pair in all_pairs])
     all_outputs = np.array([pair[1] for pair in all_pairs])
-    all_inputs = all_inputs.reshape(-1, 81)  # Flatten inputs.  For now.
+    # all_inputs = all_inputs.reshape(-1, 81)  # Flatten inputs.  For now.
     all_outputs = all_outputs[:, np.newaxis]  # For consistency, outputs are 1-lists.
 
     # Split into train and test
