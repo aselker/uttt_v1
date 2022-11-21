@@ -1,6 +1,7 @@
 import os
 import sys
 import pickle
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -18,7 +19,8 @@ def loss(y_true, y_pred):
 
 def main():
     histories = []
-    for filename in sys.argv[2:]:
+    filenames = Path(sys.argv[2]).glob("**/*.pkl")
+    for filename in filenames:
         with open(filename, "rb") as f:
             histories += pickle.load(f)
 
@@ -35,7 +37,14 @@ def main():
         for state_index, state_ in enumerate(history):
             # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
             value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
-            all_pairs.append((state_.ixi, value))
+
+            if False: # No rotation/mirror augmentation
+                all_pairs.append((state_.ixi, value))
+            else:
+                for rotation in [0,1,2,3]:
+                    all_pairs.append((np.rot90(state_.ixi, k=rotation), value))
+                    all_pairs.append((np.rot90(state_.ixi.T, k=rotation), value)) # Mirrored
+
 
     np.random.shuffle(all_pairs)  # for plausible deniability
     all_inputs = np.array([pair[0] for pair in all_pairs])
