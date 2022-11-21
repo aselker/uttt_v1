@@ -10,16 +10,18 @@ from nn_common import make_model
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 from tensorflow import keras
 
-TEST_PORTION = 0.05
+N_EPOCHS = 64
+VAL_PORTION = 0.03
+TEST_PORTION = 0.03
 
 
 def loss(y_true, y_pred):
     return keras.losses.binary_crossentropy(from_logits=False, y_true=(y_true + 1.0) / 2.0, y_pred=(y_pred + 1.0) / 2.0)
 
 
-def main():
+def ingest_and_regurgitate(in_path, out_path):
     histories = []
-    filenames = Path(sys.argv[2]).glob("**/*.pkl")
+    filenames = Path(in_path).glob("**/*.pkl")
     for filename in filenames:
         with open(filename, "rb") as f:
             histories += pickle.load(f)
@@ -38,13 +40,24 @@ def main():
             # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
             value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
 
-            if False: # No rotation/mirror augmentation
+            if False:  # No rotation/mirror augmentation
                 all_pairs.append((state_.ixi, value))
             else:
-                for rotation in [0,1,2,3]:
+                for rotation in [0, 1, 2, 3]:
                     all_pairs.append((np.rot90(state_.ixi, k=rotation), value))
-                    all_pairs.append((np.rot90(state_.ixi.T, k=rotation), value)) # Mirrored
+                    all_pairs.append((np.rot90(state_.ixi.T, k=rotation), value))  # Mirrored
 
+    with open(out_path, "wb") as f:
+        pickle.dump(all_pairs, f)
+
+
+def main():
+    if False:
+        ingest_and_regurgitate(sys.argv[1], sys.argv[2])
+        return
+
+    with open(sys.argv[2], "rb") as f:
+        all_pairs = pickle.load(f)
 
     np.random.shuffle(all_pairs)  # for plausible deniability
     all_inputs = np.array([pair[0] for pair in all_pairs])
@@ -61,18 +74,11 @@ def main():
 
     model = make_model()
 
-    model.compile(
-        optimizer="adam",
-        loss=loss,
-    )
+    # 0.01 too high.
+    optimizer = keras.optimizers.Adam(learning_rate=0.0001)
+    model.compile(optimizer=optimizer, loss=loss)
 
-    history = model.fit(
-        train_inputs,
-        train_outputs,
-        epochs=64,
-        batch_size=16384,
-        validation_split=0.1,
-    )
+    history = model.fit(train_inputs, train_outputs, epochs=N_EPOCHS, batch_size=4096, validation_split=VAL_PORTION)
 
     model.save_weights(sys.argv[1])
 
