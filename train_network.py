@@ -10,9 +10,9 @@ from nn_common import make_model
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 from tensorflow import keras
 
-N_EPOCHS = 64
-VAL_PORTION = 0.03
-TEST_PORTION = 0.03
+N_EPOCHS = 192
+VAL_PORTION = 0.01
+TEST_PORTION = 0.01
 
 
 def loss(y_true, y_pred):
@@ -73,6 +73,8 @@ def main():
     print(len(train_inputs), "train pairs,", len(test_inputs), "test pairs")
 
     model = make_model()
+    if len(sys.argv) == 4:
+        model.load_weights(sys.argv[3])
 
     # 0.01 too high.
     optimizer = keras.optimizers.Adam(learning_rate=0.0001)
@@ -94,8 +96,8 @@ def main():
 
     if True:  # Print some specific predictions
         print("Example test predictions:")
-        preds = model.predict(test_inputs[:32])
-        for pred, output in zip(preds, test_outputs):
+        preds = model.predict(test_inputs[:256])
+        for pred, output in zip(preds[:32], test_outputs):
             print(pred, pred.round(), output)
         res = preds.round().astype(int) == test_outputs[: len(preds)]
         print(np.mean(res))
