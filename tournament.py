@@ -7,15 +7,16 @@ from pathlib import Path
 from state import State
 import ixi
 
-from mcts import MctsBot, SimpleNnBot, RandomBot
+from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot
 
 """
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 8
+NUM_GAMES_PER_MATCHUP = 6
 NUM_PREFILLED_EACH = 20
 SOMETIMES_UNEQUAL = False
+RUN_FOREVER = False
 
 
 def generate_partially_full_state():
@@ -40,9 +41,10 @@ def main():
     assert len(sys.argv) == 2
 
     for epoch in itertools.count():
-        bots = [MctsBot(30), MctsBot(35)]
-        # bots = [MctsBot(30), SimpleNnBot("model.h5"), RandomBot()]
-        # bots = [SimpleNnBot("model.h5"), SimpleNnBot("model.h5")]
+        # bots = [MctsBot(30), MctsBot(35)]
+        bots = [RandomBot(), MultiPlyNnBot("out3.h5", [5, 3])]
+        # bots = [MctsBot(30), RandomBot(), SimpleNnBot("out3.h5"), MultiPlyNnBot("out3.h5", [5, 3])]
+        # bots = [SimpleNnBot("out3.h5"), SimpleNnBot("out3.h5")]
         # bots[1].name += "_the_other"
 
         # Make sure names are unique
@@ -103,6 +105,9 @@ def main():
                 else:
                     relevant_results[0] += 1
         print(tournament_results)
+
+        if not RUN_FOREVER:
+            break
 
 
 if __name__ == "__main__":
