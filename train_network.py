@@ -13,6 +13,7 @@ from tensorflow import keras
 N_EPOCHS = 192
 VAL_PORTION = 0.01
 TEST_PORTION = 0.01
+DROP_BEFORE = 3
 
 
 def loss(y_true, y_pred):
@@ -20,32 +21,35 @@ def loss(y_true, y_pred):
 
 
 def ingest_and_regurgitate(in_path, out_path):
-    histories = []
+    all_pairs = []
     filenames = Path(in_path).glob("**/*.pkl")
     for filename in filenames:
         with open(filename, "rb") as f:
-            histories += pickle.load(f)
+            histories = pickle.load(f)
 
-    all_pairs = []
-    for history in histories:
-        # sEmAnTiC vErSiOnInG
-        if len(history) == 2 and isinstance(history[0], tuple):
-            history = history[1]
-        eventual_victory_state = history[-1].victory_state()
-        assert eventual_victory_state, "Game ended without someone winning?"
-        if eventual_victory_state == 2:
-            eventual_victory_state = 0
-        eventual_victory_state = float(eventual_victory_state)
-        for state_index, state_ in enumerate(history):
-            # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
-            value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
+        for history in histories:
 
-            if False:  # No rotation/mirror augmentation
-                all_pairs.append((state_.ixi, value))
-            else:
-                for rotation in [0, 1, 2, 3]:
-                    all_pairs.append((np.rot90(state_.ixi, k=rotation), value))
-                    all_pairs.append((np.rot90(state_.ixi.T, k=rotation), value))  # Mirrored
+            # sEmAnTiC vErSiOnInG
+            if len(history) == 2 and isinstance(history[0], tuple):
+                history = history[1]
+
+            if DROP_BEFORE is not None and len(history) > DROP_BEFORE:
+                history = history[-DROP_BEFORE:]
+
+            eventual_victory_state = history[-1].victory_state()
+            if eventual_victory_state == 2:
+                eventual_victory_state = 0
+            eventual_victory_state = float(eventual_victory_state)
+            for state_index, state_ in enumerate(history):
+                # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
+                value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
+
+                if False:  # No rotation/mirror augmentation
+                    all_pairs.append((state_.ixi, value))
+                else:
+                    for rotation in [0, 1, 2, 3]:
+                        all_pairs.append((np.rot90(state_.ixi, k=rotation), value))
+                        all_pairs.append((np.rot90(state_.ixi.T, k=rotation), value))  # Mirrored
 
     with open(out_path, "wb") as f:
         pickle.dump(all_pairs, f)
