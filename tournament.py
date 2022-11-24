@@ -37,12 +37,50 @@ def generate_partially_full_state():
     return state_
 
 
+def summarize_histories(histories):
+    # Calculate and display tournament results.
+    # There's gotta be a better way to do this.  A dict isn't quite the right data structure.  Or maybe tournament_results should map from every pairing including duplicates.
+    # tournament_results = {(bot1.name, bot2.name): [0, 0, 0] for bot1, bot2 in matchups}
+    tournament_results = {}
+    for history in histories:
+        even_name, odd_name = history[0]
+        if (even_name, odd_name) in tournament_results:
+            relevant_results = tournament_results[(even_name, odd_name)]
+            swap = False
+        elif (odd_name, even_name) in tournament_results:
+            relevant_results = tournament_results[(odd_name, even_name)]
+            swap = True
+        else:
+            tournament_results[(even_name, odd_name)] = [0, 0, 0]
+            relevant_results = tournament_results[(even_name, odd_name)]
+            swap = False
+
+        if history[1][-1].victory_state() == 2:
+            relevant_results[2] += 1
+        elif len(history[1]) % 2:
+            if swap:
+                relevant_results[0] += 1
+            else:
+                relevant_results[1] += 1
+        else:
+            if swap:
+                relevant_results[1] += 1
+            else:
+                relevant_results[0] += 1
+    return tournament_results
+
+
 def main():
+    if sys.argv[1] == "summarize":
+        with open(sys.argv[2], "rb") as f:
+            histories = pickle.load(f)
+        print(summarize_histories(histories))
+        return
     assert len(sys.argv) == 2
 
     for epoch in itertools.count():
-        # bots = [MctsBot(30), MctsBot(35)]
-        bots = [RandomBot(), MultiPlyNnBot("out3.h5", [5, 3])]
+        bots = [MctsBot(30), MctsBot(35)]
+        # bots = [RandomBot(), MultiPlyNnBot("out3.h5", [5, 3])]
         # bots = [MctsBot(30), RandomBot(), SimpleNnBot("out3.h5"), MultiPlyNnBot("out3.h5", [5, 3])]
         # bots = [SimpleNnBot("out3.h5"), SimpleNnBot("out3.h5")]
         # bots[1].name += "_the_other"
@@ -81,31 +119,7 @@ def main():
             # pickle.dump([h[1] for h in histories], f)
             pickle.dump(histories, f)
 
-        # Calculate and display tournament results.
-        # There's gotta be a better way to do this.  A dict isn't quite the right data structure.  Or maybe tournament_results should map from every pairing including duplicates.
-        tournament_results = {(bot1.name, bot2.name): [0, 0, 0] for bot1, bot2 in matchups}
-        for history in histories:
-            even_name, odd_name = history[0]
-            if (even_name, odd_name) in tournament_results:
-                relevant_results = tournament_results[(even_name, odd_name)]
-                swap = False
-            else:
-                relevant_results = tournament_results[(odd_name, even_name)]
-                swap = True
-
-            if history[1][-1].victory_state() == 2:
-                relevant_results[2] += 1
-            elif len(history[1]) % 2:
-                if swap:
-                    relevant_results[0] += 1
-                else:
-                    relevant_results[1] += 1
-            else:
-                if swap:
-                    relevant_results[1] += 1
-                else:
-                    relevant_results[0] += 1
-        print(tournament_results)
+        print(summarize_histories(histories))
 
         if not RUN_FOREVER:
             break
