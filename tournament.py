@@ -13,8 +13,8 @@ from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 6
-NUM_PREFILLED_EACH = 20
+NUM_GAMES_PER_MATCHUP = 80
+NUM_PREFILLED_EACH = 32
 SOMETIMES_UNEQUAL = False
 RUN_FOREVER = False
 
@@ -80,8 +80,7 @@ def main():
 
     for epoch in itertools.count():
         bots = [MctsBot(30), MctsBot(35)]
-        # bots = [RandomBot(), MultiPlyNnBot("out3.h5", [5, 3])]
-        # bots = [MctsBot(30), RandomBot(), SimpleNnBot("out3.h5"), MultiPlyNnBot("out3.h5", [5, 3])]
+        # bots = [MctsBot(30), RandomBot(), SimpleNnBot("first_3_v3"), MultiPlyNnBot("first_3_v3", [5, 3])]
         # bots = [SimpleNnBot("out3.h5"), SimpleNnBot("out3.h5")]
         # bots[1].name += "_the_other"
         # bots = [MctsBot(200), HumanBot()]
