@@ -7,7 +7,7 @@ from pathlib import Path
 from state import State
 import ixi
 
-from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot
+from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot
 
 """
 Round-robin tournament.
@@ -46,6 +46,7 @@ def main():
         # bots = [MctsBot(30), RandomBot(), SimpleNnBot("out3.h5"), MultiPlyNnBot("out3.h5", [5, 3])]
         # bots = [SimpleNnBot("out3.h5"), SimpleNnBot("out3.h5")]
         # bots[1].name += "_the_other"
+        # bots = [MctsBot(200), HumanBot()]
 
         # Make sure names are unique
         assert len([bot.name for bot in bots]) == len({bot.name for bot in bots})
@@ -94,7 +95,7 @@ def main():
 
             if history[1][-1].victory_state() == 2:
                 relevant_results[2] += 1
-            elif len(history) % 2:
+            elif len(history[1]) % 2:
                 if swap:
                     relevant_results[0] += 1
                 else:

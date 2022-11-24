@@ -83,3 +83,16 @@ class RandomBot:
     def get_move(self, state_):
         possible_moves = state_.list_valid_moves()
         return possible_moves[np.random.choice(range(len(possible_moves)))]
+
+class HumanBot:
+    def __init__(self):
+        self.name = "HumanBot"
+
+    def get_move(self, state_):
+        print(state_)
+        human_input = input()
+        assert len(human_input) == 4
+        move = tuple([int(h) for h in human_input])
+        # TODO: Validate move
+        return move
+
