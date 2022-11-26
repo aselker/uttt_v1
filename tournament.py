@@ -13,10 +13,10 @@ from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 20
+NUM_GAMES_PER_MATCHUP = 8
 NUM_PREFILLED_EACH = 32
 SOMETIMES_UNEQUAL = False
-RUN_FOREVER = False
+RUN_FOREVER = True
 
 
 def generate_partially_full_state():
@@ -83,7 +83,7 @@ def main():
     assert len(sys.argv) == 2
 
     for epoch in itertools.count():
-        bots = [MctsBot(30), MctsBot(200)]
+        bots = [MctsBot(200), MctsBot(250)]
         # bots = [MctsBot(30), RandomBot(), SimpleNnBot("first_3_v3"), MultiPlyNnBot("first_3_v3", [5, 3])]
         # bots = [SimpleNnBot("out3.h5"), SimpleNnBot("out3.h5")]
         # bots[1].name += "_the_other"

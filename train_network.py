@@ -10,10 +10,10 @@ from nn_common import make_model
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 from tensorflow import keras
 
-N_EPOCHS = 384
+N_EPOCHS = 64
 VAL_PORTION = 0.01
 TEST_PORTION = 0.01
-DROP_BEFORE = 3
+DROP_BEFORE = 6
 
 
 def loss(y_true, y_pred):
@@ -56,8 +56,8 @@ def ingest_and_regurgitate(in_path, out_path):
 
 
 def main():
-    if False:
-        ingest_and_regurgitate(sys.argv[1], sys.argv[2])
+    if sys.argv[1] == "preprocess":
+        ingest_and_regurgitate(sys.argv[2], sys.argv[3])
         return
 
     with open(sys.argv[2], "rb") as f:
@@ -81,7 +81,7 @@ def main():
         model.load_weights(sys.argv[3])
 
     # 0.01 too high.
-    optimizer = keras.optimizers.Adam(learning_rate=0.0001)
+    optimizer = keras.optimizers.Adam(learning_rate=0.001)
     model.compile(optimizer=optimizer, loss=loss)
 
     history = model.fit(train_inputs, train_outputs, epochs=N_EPOCHS, batch_size=4096, validation_split=VAL_PORTION)
