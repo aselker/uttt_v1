@@ -10,7 +10,7 @@ from nn_common import make_model
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 from tensorflow import keras
 
-N_EPOCHS = 64
+N_EPOCHS = 4
 VAL_PORTION = 0.01
 TEST_PORTION = 0.01
 DROP_BEFORE = 6
@@ -82,11 +82,20 @@ def main():
     if len(sys.argv) == 4:
         model.load_weights(sys.argv[3])
 
-    # 0.01 too high.
+    # 0.01 too high.  I think Keras defaults to 0.001.
     optimizer = keras.optimizers.Adam(learning_rate=0.001)
     model.compile(optimizer=optimizer, loss=loss)
 
-    history = model.fit(train_inputs, train_outputs, epochs=N_EPOCHS, batch_size=4096, validation_split=VAL_PORTION)
+    tboard_callback = keras.callbacks.TensorBoard(log_dir="logs", histogram_freq=1, profile_batch="500,520")
+
+    history = model.fit(
+        train_inputs,
+        train_outputs,
+        epochs=N_EPOCHS,
+        batch_size=4096,
+        validation_split=VAL_PORTION,
+        callbacks=[tboard_callback],
+    )
 
     model.save_weights(sys.argv[1])
 
