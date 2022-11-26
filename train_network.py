@@ -68,6 +68,7 @@ def main():
     all_outputs = np.array([pair[1] for pair in all_pairs])
     # all_inputs = all_inputs.reshape(-1, 81)  # Flatten inputs.  For now.
     all_outputs = all_outputs[:, np.newaxis]  # For consistency, outputs are 1-lists.
+    del all_pairs
 
     # Split into train and test
     train_inputs = all_inputs[: int(len(all_inputs) * (1 - TEST_PORTION))]
@@ -75,6 +76,7 @@ def main():
     train_outputs = all_outputs[: int(len(all_outputs) * (1 - TEST_PORTION))]
     test_outputs = all_outputs[int(len(all_outputs) * (1 - TEST_PORTION)) :]
     print(len(train_inputs), "train pairs,", len(test_inputs), "test pairs")
+    del (all_inputs, all_outputs)
 
     model = make_model()
     if len(sys.argv) == 4:
