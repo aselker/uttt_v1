@@ -56,7 +56,7 @@ class MultiPlyNnBot(ValueFunctionBot):
             possible_state = state_.copy()
             possible_state.move(possible_move)
             possible_states.append(possible_state)
-            value = self.nn.predict(np.array([possible_state.ixi]), verbose=False)[0]
+            value = self.nn.predict(np.array([possible_state.ixi]), verbose=False)[0][0]
             value = -value  # Because we want to leave the next player in the worst-possible state
             values.append(value)
 

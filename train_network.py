@@ -68,6 +68,7 @@ def main():
     all_outputs = np.array([pair[1] for pair in all_pairs])
     # all_inputs = all_inputs.reshape(-1, 81)  # Flatten inputs.  For now.
     all_outputs = all_outputs[:, np.newaxis]  # For consistency, outputs are 1-lists.
+    del all_pairs
 
     # Split into train and test
     train_inputs = all_inputs[: int(len(all_inputs) * (1 - TEST_PORTION))]
@@ -75,16 +76,26 @@ def main():
     train_outputs = all_outputs[: int(len(all_outputs) * (1 - TEST_PORTION))]
     test_outputs = all_outputs[int(len(all_outputs) * (1 - TEST_PORTION)) :]
     print(len(train_inputs), "train pairs,", len(test_inputs), "test pairs")
+    del (all_inputs, all_outputs)
 
     model = make_model()
     if len(sys.argv) == 4:
         model.load_weights(sys.argv[3])
 
-    # 0.01 too high.
-    optimizer = keras.optimizers.Adam(learning_rate=0.0001)
+    # 0.01 too high.  I think Keras defaults to 0.001.
+    optimizer = keras.optimizers.Adam(learning_rate=0.001)
     model.compile(optimizer=optimizer, loss=loss)
 
-    history = model.fit(train_inputs, train_outputs, epochs=N_EPOCHS, batch_size=8192, validation_split=VAL_PORTION)
+    tboard_callback = keras.callbacks.TensorBoard(log_dir="logs", histogram_freq=1, profile_batch="500,520")
+
+    history = model.fit(
+        train_inputs,
+        train_outputs,
+        epochs=N_EPOCHS,
+        batch_size=4096,
+        validation_split=VAL_PORTION,
+        callbacks=[tboard_callback],
+    )
 
     model.save_weights(sys.argv[1])
 
