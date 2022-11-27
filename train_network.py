@@ -81,7 +81,7 @@ def main():
         model.load_weights(sys.argv[3])
 
     # 0.01 too high.
-    optimizer = keras.optimizers.Adam(learning_rate=0.00001)
+    optimizer = keras.optimizers.Adam(learning_rate=0.0001)
     model.compile(optimizer=optimizer, loss=loss)
 
     history = model.fit(train_inputs, train_outputs, epochs=N_EPOCHS, batch_size=8192, validation_split=VAL_PORTION)
