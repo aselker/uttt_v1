@@ -10,7 +10,7 @@ from nn_common import make_model
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 from tensorflow import keras
 
-N_EPOCHS = 64
+N_EPOCHS = 384
 VAL_PORTION = 0.01
 TEST_PORTION = 0.01
 DROP_BEFORE = 6
@@ -81,10 +81,10 @@ def main():
         model.load_weights(sys.argv[3])
 
     # 0.01 too high.
-    optimizer = keras.optimizers.Adam(learning_rate=0.001)
+    optimizer = keras.optimizers.Adam(learning_rate=0.00001)
     model.compile(optimizer=optimizer, loss=loss)
 
-    history = model.fit(train_inputs, train_outputs, epochs=N_EPOCHS, batch_size=4096, validation_split=VAL_PORTION)
+    history = model.fit(train_inputs, train_outputs, epochs=N_EPOCHS, batch_size=8192, validation_split=VAL_PORTION)
 
     model.save_weights(sys.argv[1])
 
