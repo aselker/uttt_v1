@@ -3,20 +3,21 @@ import pickle
 import numpy as np
 import itertools
 from pathlib import Path
+import warnings
+import tensorflow as tf
 
 from state import State
 import ixi
-
 from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot
 
 """
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 8
-NUM_PREFILLED_EACH = 32
+NUM_GAMES_PER_MATCHUP = 4
+NUM_PREFILLED_EACH = 24
 SOMETIMES_UNEQUAL = False
-RUN_FOREVER = True
+RUN_FOREVER = False
 
 
 def generate_partially_full_state():
@@ -83,8 +84,9 @@ def main():
     assert len(sys.argv) == 2
 
     for epoch in itertools.count():
-        bots = [MctsBot(200), MctsBot(250)]
-        # bots = [MctsBot(30), RandomBot(), SimpleNnBot("first_3_v3"), MultiPlyNnBot("first_3_v3", [5, 3])]
+        # bots = [MctsBot(200), MctsBot(250)]
+        # bots = [MctsBot(30), RandomBot(), SimpleNnBot("training_data/trained_models/first6"), MultiPlyNnBot("training_data/trained_models/first6", [5, 3])]
+        bots = [HumanBot(), MultiPlyNnBot("training_data/trained_models/first6", [99, 8, 5])]
         # bots = [SimpleNnBot("out3.h5"), SimpleNnBot("out3.h5")]
         # bots[1].name += "_the_other"
         # bots = [MctsBot(200), HumanBot()]
@@ -129,4 +131,6 @@ def main():
 
 
 if __name__ == "__main__":
+    tf.config.threading.set_intra_op_parallelism_threads(16)
+    warnings.simplefilter("error", np.VisibleDeprecationWarning)
     main()

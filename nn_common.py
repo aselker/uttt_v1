@@ -5,26 +5,68 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 
-l1 = 1e-7
-l2 = 1e-6
-
 
 def make_model():
-    return keras.models.Sequential(
-        # [keras.layers.Dense(256, activation="relu", kernel_regularizer=keras.regularizers.L1L2(l1=l1, l2=l2), input_shape=(81,))]
-        # + [keras.layers.Dense(256, activation="relu", kernel_regularizer=keras.regularizers.L1L2(l1=l1, l2=l2)) for _ in range(7)]
-        [
-            keras.layers.Reshape((81,), input_shape=(3, 3, 3, 3)),
-            keras.layers.Dense(256, activation="relu", input_shape=(81,)),
-        ]
-        + [keras.layers.Dense(256, activation="relu") for _ in range(10)]
-        + [keras.layers.Dense(1, activation="tanh")]
-    )
+    regularizer = None
+    # regularizer = kernel_regularizer=keras.regularizers.L1L2(l1=1e-7, l2=1e-6)
+
+    if False:
+        # Simple fully-connected
+        return keras.models.Sequential(
+            [
+                keras.layers.Reshape((81,), input_shape=(3, 3, 3, 3)),
+                keras.layers.Dense(256, activation="relu", input_shape=(81,)),
+            ]
+            + [keras.layers.Dense(256, activation="relu") for _ in range(10)]
+            + [keras.layers.Dense(1, activation="tanh")]
+        )
+    else:
+
+        ixi_input = keras.Input(shape=(3, 3, 3, 3))
+        flattened_once = keras.layers.Reshape((9, 3, 3), input_shape=(3, 3, 3, 3))(ixi_input)
+
+        cxc_layers = [keras.layers.Dense(16, activation="relu") for _ in range(3)]
+
+        cxc_outputs = []
+        for i in range(9):
+            cxc_intermediate = flattened_once[i]
+            for layer in cxc_layers:
+                cxc_intermediate = layer(cxc_intermediate)
+            cxc_outputs.append(cxc_intermediate)
+
+        cxc_outputs_concatenated = keras.layers.Concatenate()(cxc_outputs)
+        ixi_intermediate = keras.layers.Reshape((16 * 9,))(cxc_outputs_concatenated)
+        for _ in range(4):
+            ixi_intermediate = keras.layers.Dense(256, activation="relu")(ixi_intermediate)
+
+        output = keras.layers.Dense(1, activation="tanh")(ixi_intermediate)
+
+        return keras.Model(ixi_input, output)
+
+        if False:  # XXX
+            # Smaller network for each cxc, then a big fully-connected that consumes their outputs
+            cxc_stack = keras.models.Sequential(
+                [
+                    keras.layers.Dense(16, activation="relu", input_shape=(9,)),
+                    keras.layers.Dense(16, activation="relu"),
+                ]
+            )
+            cxc_networks = [cxc_stack(input_[i, j]) for i in range(3) for j in range(3)]
+            big_stack = keras.models.Sequential(
+                [
+                    keras.layers.Concatenate(cxc_networks),
+                    keras.layers.Reshape((81,), input_shape=(9, 3, 3)),
+                    keras.layers.Dense(256, activation="relu", input_shape=(81,)),
+                ]
+                + [keras.layers.Dense(256, activation="relu") for _ in range(8)]
+                + [keras.layers.Dense(1, activation="tanh")]
+            )
+            return keras.Model(input_, big_stack)
 
 
 # class Symmetric(keras.units.Layer):
 #     """
-#     Input must be (batch size, input_dim, input_dim).  Output is (batch sizen, output_dim, output_dim):
+#     Input must be (batch size, input_dim, input_dim).  Output is (batch size, output_dim, output_dim):
 
 #     Stored weights and biases are (almost) twice as big as they need to be.  I think this is better than "folding" the
 #     triangle into a rectangle.

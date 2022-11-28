@@ -33,7 +33,7 @@ class SimpleNnBot(ValueFunctionBot):
         self.nn.load_weights(filename)
 
         def value_function(state_):
-            return self.nn.predict(np.array([state_.ixi]), verbose=False)[0]
+            return self.nn.predict(np.array([state_.ixi]), verbose=False)[0][0]
 
         super().__init__(value_function, "SimpleNnBot_" + filename)
 
@@ -47,7 +47,7 @@ class MultiPlyNnBot(ValueFunctionBot):
             return 0 if victory_state == 2 else victory_state
 
         if len(remaining_plies) == 0:
-            return self.nn.predict(np.array([state_.ixi]), verbose=False)[0]
+            return self.nn.predict(np.array([state_.ixi]), verbose=False)[0][0]
 
         possible_moves = state_.list_valid_moves()
         values = []
@@ -90,9 +90,18 @@ class HumanBot:
 
     def get_move(self, state_):
         print(state_)
-        human_input = input()
-        assert len(human_input) == 4
-        move = tuple([int(h) for h in human_input])
-        # TODO: Validate move
-        return move
+        while True:
+            human_input = input()
+            if len(human_input) != 4:
+                print("format: 0000 to 3333")
+                continue
+            try:
+                move = tuple([int(h) for h in human_input])
+            except ValueError:
+                print("format: 0000 to 3333")
+                continue
+            if move not in state_.list_valid_moves():
+                print("invalid move")
+                continue
+            return move
 
