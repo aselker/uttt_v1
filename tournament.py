@@ -3,20 +3,20 @@ import pickle
 import numpy as np
 import itertools
 from pathlib import Path
+import warnings
+import tensorflow as tf
 
 from state import State
 import ixi
-
 from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot
 
 """
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 8
 NUM_PREFILLED_EACH = 20
 SOMETIMES_UNEQUAL = False
-RUN_FOREVER = True
+RUN_FOREVER = False
 
 
 def generate_partially_full_state():
@@ -129,4 +129,6 @@ def main():
 
 
 if __name__ == "__main__":
+    tf.config.threading.set_intra_op_parallelism_threads(16)
+    warnings.simplefilter("error", np.VisibleDeprecationWarning)
     main()
