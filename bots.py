@@ -93,7 +93,7 @@ class HumanBot:
         while True:
             human_input = input()
             if len(human_input) != 4:
-                print("format: 0000 to 3333")
+                print("format: 0000 to 2222")
                 continue
             try:
                 move = tuple([int(h) for h in human_input])

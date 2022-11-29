@@ -66,7 +66,7 @@ def main():
         return
 
     with open(sys.argv[2], "rb") as f:
-        if f.endswith("pkl"):
+        if sys.argv[2].endswith("pkl"):
             all_pairs = pickle.load(f)
             np.random.shuffle(all_pairs)  # for plausible deniability
             all_inputs = np.array([pair[0] for pair in all_pairs])
@@ -87,8 +87,6 @@ def main():
     print(len(train_inputs), "train pairs,", len(test_inputs), "test pairs")
     del (all_inputs, all_outputs)
 
-    return  # XXX
-
     model = make_model()
     if len(sys.argv) == 4:
         model.load_weights(sys.argv[3])
@@ -97,22 +95,23 @@ def main():
     optimizer = keras.optimizers.Adam(learning_rate=0.0001)
     model.compile(optimizer=optimizer, loss=loss)
 
-    tboard_callback = keras.callbacks.TensorBoard(log_dir="logs", histogram_freq=1, profile_batch="500,520")
+    # tboard_callback = keras.callbacks.TensorBoard(log_dir="logs", histogram_freq=1, profile_batch="500,520")
 
     history = model.fit(
         train_inputs,
         train_outputs,
         epochs=N_EPOCHS,
-        batch_size=2048,
+        batch_size=1, # XXX
         validation_split=VAL_PORTION,
-        callbacks=[tboard_callback],
+        # callbacks=[tboard_callback],
     )
 
     model.save_weights(sys.argv[1])
 
-    plt.plot(history.history["loss"])
-    plt.plot(history.history["val_loss"])
-    plt.show()
+    if False: # Plot history
+        plt.plot(history.history["loss"])
+        plt.plot(history.history["val_loss"])
+        plt.show()
 
     print("Test:")
     model.evaluate(
@@ -122,7 +121,7 @@ def main():
 
     if True:  # Print some specific predictions
         print("Example test predictions:")
-        preds = model.predict(test_inputs[:256])
+        preds = model.predict(test_inputs[:512])
         for pred, output in zip(preds[:32], test_outputs):
             print(pred, pred.round(), output)
         res = preds.round().astype(int) == test_outputs[: len(preds)]
