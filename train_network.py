@@ -51,8 +51,13 @@ def ingest_and_regurgitate(in_path, out_path):
                         all_pairs.append((np.rot90(state_.ixi, k=rotation), value))
                         all_pairs.append((np.rot90(state_.ixi.T, k=rotation), value))  # Mirrored
 
+    np.random.shuffle(all_pairs)  # for plausible deniability
+
+    all_inputs = np.array([pair[0] for pair in all_pairs])
+    all_outputs = np.array([pair[1] for pair in all_pairs])
+
     with open(out_path, "wb") as f:
-        pickle.dump(all_pairs, f)
+        np.savez(f, all_inputs=all_inputs, all_outputs=all_outputs)
 
 
 def main():
@@ -61,14 +66,18 @@ def main():
         return
 
     with open(sys.argv[2], "rb") as f:
-        all_pairs = pickle.load(f)
+        if f.endswith("pkl"):
+            all_pairs = pickle.load(f)
+            np.random.shuffle(all_pairs)  # for plausible deniability
+            all_inputs = np.array([pair[0] for pair in all_pairs])
+            all_outputs = np.array([pair[1] for pair in all_pairs])
+            del(all_pairs)
+        else:
+            loaded = np.load(f)
+            all_inputs = loaded["all_inputs"]
+            all_outputs = loaded["all_outputs"]
 
-    np.random.shuffle(all_pairs)  # for plausible deniability
-    all_inputs = np.array([pair[0] for pair in all_pairs])
-    all_outputs = np.array([pair[1] for pair in all_pairs])
-    # all_inputs = all_inputs.reshape(-1, 81)  # Flatten inputs.  For now.
     all_outputs = all_outputs[:, np.newaxis]  # For consistency, outputs are 1-lists.
-    del all_pairs
 
     # Split into train and test
     train_inputs = all_inputs[: int(len(all_inputs) * (1 - TEST_PORTION))]
@@ -77,6 +86,8 @@ def main():
     test_outputs = all_outputs[int(len(all_outputs) * (1 - TEST_PORTION)) :]
     print(len(train_inputs), "train pairs,", len(test_inputs), "test pairs")
     del (all_inputs, all_outputs)
+
+    return  # XXX
 
     model = make_model()
     if len(sys.argv) == 4:
