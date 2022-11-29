@@ -17,7 +17,7 @@ def make_model():
             keras.layers.Reshape((81,), input_shape=(3, 3, 3, 3)),
             keras.layers.Dense(256, activation="relu", input_shape=(81,)),
         ]
-        + [keras.layers.Dense(256, activation="relu") for _ in range(10)]
+        + [keras.layers.Dense(256, activation="relu") for _ in range(5)]
         + [keras.layers.Dense(1, activation="tanh")]
     )
 
