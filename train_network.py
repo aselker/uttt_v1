@@ -10,7 +10,7 @@ from nn_common import make_model
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 from tensorflow import keras
 
-N_EPOCHS = 4
+N_EPOCHS = 384
 VAL_PORTION = 0.01
 TEST_PORTION = 0.01
 DROP_BEFORE = 6
