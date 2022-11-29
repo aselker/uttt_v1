@@ -83,7 +83,7 @@ def main():
         model.load_weights(sys.argv[3])
 
     # 0.01 too high.  I think Keras defaults to 0.001.
-    optimizer = keras.optimizers.Adam(learning_rate=0.000025)
+    optimizer = keras.optimizers.Adam(learning_rate=0.0001)
     model.compile(optimizer=optimizer, loss=loss)
 
     tboard_callback = keras.callbacks.TensorBoard(log_dir="logs", histogram_freq=1, profile_batch="500,520")
@@ -92,7 +92,7 @@ def main():
         train_inputs,
         train_outputs,
         epochs=N_EPOCHS,
-        batch_size=2048,
+        batch_size=0,
         validation_split=VAL_PORTION,
         callbacks=[tboard_callback],
     )
