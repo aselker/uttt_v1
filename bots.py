@@ -39,6 +39,10 @@ class SimpleNnBot(ValueFunctionBot):
 
 
 class MultiPlyNnBot(ValueFunctionBot):
+    """
+    TODO: Make this less loopy, but instead look at all of ply N at the same time.  More efficent.
+    """
+
     def value_function(self, state_):
         return self._value_function_helper(state_, self.plies)
 
@@ -76,6 +80,24 @@ class MultiPlyNnBot(ValueFunctionBot):
         super().__init__(self.value_function, "MultiPlyNnBot_" + filename + "_" + str(plies))
 
 
+class FasterMultiPlyNnBot:
+    def get_move(self, state_):
+        possible_moves = state_.list_valid_moves()
+        possible_states = [state_.copy().move(possible_move) for possible_move in possible_moves]
+        values = self.get_values(possible_states)
+        return possible_moves[np.argmax(values)]
+
+    def get_values(self, states, remaining_plies):
+        """Like get_value, but takes and returns multiple states."""
+        all_possible_states
+        for state_ in states:
+            possible_moves = state_.list_valid_moves()
+            possible_states = [state_.copy().move(possible_move) for possible_move in possible_moves]
+            all_possible_states += possible_states
+
+        this_ply_values = self.nn.predict(np.array([all_possible_state.ixi]), verbose=False)[0][0]
+
+
 class RandomBot:
     def __init__(self):
         self.name = "RandomBot"
@@ -83,6 +105,7 @@ class RandomBot:
     def get_move(self, state_):
         possible_moves = state_.list_valid_moves()
         return possible_moves[np.random.choice(range(len(possible_moves)))]
+
 
 class HumanBot:
     def __init__(self):
@@ -104,4 +127,3 @@ class HumanBot:
                 print("invalid move")
                 continue
             return move
-
