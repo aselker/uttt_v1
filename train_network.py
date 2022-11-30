@@ -71,7 +71,7 @@ def main():
             np.random.shuffle(all_pairs)  # for plausible deniability
             all_inputs = np.array([pair[0] for pair in all_pairs])
             all_outputs = np.array([pair[1] for pair in all_pairs])
-            del(all_pairs)
+            del all_pairs
         else:
             loaded = np.load(f)
             all_inputs = loaded["all_inputs"]
@@ -101,14 +101,14 @@ def main():
         train_inputs,
         train_outputs,
         epochs=N_EPOCHS,
-        batch_size=1, # XXX
+        batch_size=8192,
         validation_split=VAL_PORTION,
         # callbacks=[tboard_callback],
     )
 
     model.save_weights(sys.argv[1])
 
-    if False: # Plot history
+    if False:  # Plot history
         plt.plot(history.history["loss"])
         plt.plot(history.history["val_loss"])
         plt.show()

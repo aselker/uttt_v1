@@ -21,10 +21,12 @@ def make_model():
             + [keras.layers.Dense(1, activation="tanh")]
         )
     else:
+        arm_thickness = 32
+
         ixi_input = keras.Input(shape=(3, 3, 3, 3))
         flattened_once = keras.layers.Reshape((3, 3, 9))(ixi_input)
 
-        cxc_layers = [keras.layers.Dense(16, activation="relu") for _ in range(3)]
+        cxc_layers = [keras.layers.Dense(arm_thickness, activation="relu") for _ in range(4)]
         cxc_outputs = []
         for i in range(3):
             for j in range(3):
@@ -33,9 +35,9 @@ def make_model():
                     cxc_intermediate = layer(cxc_intermediate)
                 cxc_outputs.append(cxc_intermediate)
 
-        prev_move_input = keras.Input(shape=(3,3))
-        cxc_outputs_and_prev_move= keras.layers.Concatenate()(cxc_outputs + [prev_move_input])
-        ixi_intermediate = keras.layers.Reshape((16 * 9,))(cxc_outputs_and_prev_move)
+        prev_move_input = keras.Input(shape=(3, 3))
+        cxc_outputs_and_prev_move = keras.layers.Concatenate()(cxc_outputs + [prev_move_input])
+        ixi_intermediate = keras.layers.Reshape((arm_thickness * 9,))(cxc_outputs_concatenated)
         for _ in range(4):
             ixi_intermediate = keras.layers.Dense(256, activation="relu")(ixi_intermediate)
         output = keras.layers.Dense(1, activation="tanh")(ixi_intermediate)
