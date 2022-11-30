@@ -10,7 +10,7 @@ def make_model():
     regularizer = None
     # regularizer = kernel_regularizer=keras.regularizers.L1L2(l1=1e-7, l2=1e-6)
 
-    if True:
+    if False:
         # Simple fully-connected
         return keras.models.Sequential(
             [
