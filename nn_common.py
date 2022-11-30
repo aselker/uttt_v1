@@ -10,7 +10,7 @@ def make_model():
     regularizer = None
     # regularizer = kernel_regularizer=keras.regularizers.L1L2(l1=1e-7, l2=1e-6)
 
-    if True:
+    if False:
         # Simple fully-connected
         return keras.models.Sequential(
             [
@@ -33,13 +33,14 @@ def make_model():
                     cxc_intermediate = layer(cxc_intermediate)
                 cxc_outputs.append(cxc_intermediate)
 
-        cxc_outputs_concatenated = keras.layers.Concatenate()(cxc_outputs)
-        ixi_intermediate = keras.layers.Reshape((16 * 9,))(cxc_outputs_concatenated)
+        prev_move_input = keras.Input(shape=(3,3))
+        cxc_outputs_and_prev_move= keras.layers.Concatenate()(cxc_outputs + [prev_move_input])
+        ixi_intermediate = keras.layers.Reshape((16 * 9,))(cxc_outputs_and_prev_move)
         for _ in range(4):
             ixi_intermediate = keras.layers.Dense(256, activation="relu")(ixi_intermediate)
         output = keras.layers.Dense(1, activation="tanh")(ixi_intermediate)
 
-        return keras.Model(ixi_input, output)
+        return keras.Model([ixi_input, prev_move_input], output)
 
 
 # class Symmetric(keras.units.Layer):
