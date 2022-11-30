@@ -50,10 +50,10 @@ def ingest_and_regurgitate(in_path, out_path):
                 prev_move = np.zeros((3, 3))
                 prev_move[state_.prev_move[2], state_.prev_move[3]] = 1
                 for rotation in [0, 1, 2, 3]:
-                    rotated_ixi = np.rot90(state_.ixi, k=rotation)
-                    rotated_prev_move = np.rot90(np.rot90(prev_move, axes=(2, 3), k=rotation), axes=(0, 1), k=rotation)
-                    all_examples.append((rotated_ixi, prev_move, value))
-                    all_examples.append((rotated_ixi.transpose(1, 0, 3, 2), prev_move.T, value))  # Mirrored
+                    rotated_ixi = np.rot90(np.rot90(state_.ixi, axes=(2, 3), k=rotation), axes=(0, 1), k=rotation)
+                    rotated_prev_move = np.rot90(prev_move, k=rotation)
+                    all_examples.append((rotated_ixi, rotated_prev_move, value))
+                    all_examples.append((rotated_ixi.transpose(1, 0, 3, 2), rotated_prev_move.T, value))  # Mirrored
 
     np.random.shuffle(all_examples)  # for plausible deniability
 
@@ -62,7 +62,7 @@ def ingest_and_regurgitate(in_path, out_path):
 
     ixis = np.array([example[0] for example in all_examples])
     prev_moves = np.array([example[1] for example in all_examples])
-    results = np.array([example[1] for example in all_examples])
+    results = np.array([example[2] for example in all_examples])
 
     with open(out_path, "wb") as f:
         np.savez(f, ixis=ixis, prev_moves=prev_moves, results=results)
