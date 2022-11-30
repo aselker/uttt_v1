@@ -10,10 +10,14 @@ from nn_common import make_model
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 from tensorflow import keras
 
+# Preprocessing
+DROP_BEFORE = 6
+LIMIT_EXAMPLE_COUNT = 10_000_000
+
+# Training
 N_EPOCHS = 256
 VAL_PORTION = 0.01
 TEST_PORTION = 0.01
-DROP_BEFORE = 6
 
 
 def loss(y_true, y_pred):
@@ -21,7 +25,7 @@ def loss(y_true, y_pred):
 
 
 def ingest_and_regurgitate(in_path, out_path):
-    all_pairs = []
+    all_examples = []
     filenames = Path(in_path).glob("**/*.pkl")
     for filename in filenames:
         with open(filename, "rb") as f:
@@ -31,7 +35,7 @@ def ingest_and_regurgitate(in_path, out_path):
 
             # sEmAnTiC vErSiOnInG
             if len(history) == 2 and isinstance(history[0], tuple):
-                history = history[1]
+                history = history[1]  # Drop bot names
 
             if DROP_BEFORE is not None and len(history) > DROP_BEFORE:
                 history = history[-DROP_BEFORE:]
@@ -43,21 +47,25 @@ def ingest_and_regurgitate(in_path, out_path):
             for state_index, state_ in enumerate(history):
                 # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
                 value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
+                prev_move = np.zeros((3, 3))
+                prev_move[state_.prev_move[2], state_.prev_move[3]] = 1
+                for rotation in [0, 1, 2, 3]:
+                    rotated_ixi = np.rot90(state_.ixi, k=rotation)
+                    rotated_prev_move = np.rot90(prev_move, k=rotation)
+                    all_examples.append((rotated_ixi, prev_move, value))
+                    all_examples.append((rotated_ixi.transpose(1, 0, 3, 2), prev_move.T, value))  # Mirrored
 
-                if False:  # No rotation/mirror augmentation
-                    all_pairs.append((state_.ixi, value))
-                else:
-                    for rotation in [0, 1, 2, 3]:
-                        all_pairs.append((np.rot90(state_.ixi, k=rotation), value))
-                        all_pairs.append((np.rot90(state_.ixi.T, k=rotation), value))  # Mirrored
+    np.random.shuffle(all_examples)  # for plausible deniability
 
-    np.random.shuffle(all_pairs)  # for plausible deniability
+    if LIMIT_EXAMPLE_COUNT:
+        all_examples = all_examples[:LIMIT_EXAMPLE_COUNT]
 
-    all_inputs = np.array([pair[0] for pair in all_pairs])
-    all_outputs = np.array([pair[1] for pair in all_pairs])
+    ixis = np.array([example[0] for example in all_examples])
+    prev_moves = np.array([example[1] for example in all_examples])
+    results = np.array([example[1] for example in all_examples])
 
     with open(out_path, "wb") as f:
-        np.savez(f, all_inputs=all_inputs, all_outputs=all_outputs)
+        np.savez(f, ixis=ixis, prev_moves=prev_moves, results=results)
 
 
 def main():
@@ -66,26 +74,22 @@ def main():
         return
 
     with open(sys.argv[2], "rb") as f:
-        if sys.argv[2].endswith("pkl"):
-            all_pairs = pickle.load(f)
-            np.random.shuffle(all_pairs)  # for plausible deniability
-            all_inputs = np.array([pair[0] for pair in all_pairs])
-            all_outputs = np.array([pair[1] for pair in all_pairs])
-            del all_pairs
-        else:
-            loaded = np.load(f)
-            all_inputs = loaded["all_inputs"]
-            all_outputs = loaded["all_outputs"]
+        loaded = np.load(f)
+        all_ixis = loaded["ixis"]
+        all_prev_moves = loaded["prev_moves"]
+        all_results = loaded["results"]
 
-    all_outputs = all_outputs[:, np.newaxis]  # For consistency, outputs are 1-lists.
+    all_results = all_results[:, np.newaxis]  # For consistency, results are 1-lists.
 
     # Split into train and test
-    train_inputs = all_inputs[: int(len(all_inputs) * (1 - TEST_PORTION))]
-    test_inputs = all_inputs[int(len(all_inputs) * (1 - TEST_PORTION)) :]
-    train_outputs = all_outputs[: int(len(all_outputs) * (1 - TEST_PORTION))]
-    test_outputs = all_outputs[int(len(all_outputs) * (1 - TEST_PORTION)) :]
-    print(len(train_inputs), "train pairs,", len(test_inputs), "test pairs")
-    del (all_inputs, all_outputs)
+    train_count = int(len(all_ixis) * (1 - TEST_PORTION))
+    train_ixis = all_ixis[:train_count]
+    test_ixis = all_ixis[train_count:]
+    train_prev_moves = all_prev_moves[:train_count]
+    test_prev_moves = all_prev_moves[train_count:]
+    train_results = all_results[:train_count]
+    test_results = all_results[train_count:]
+    print(len(train_ixis), "train pairs,", len(test_ixis), "test pairs")
 
     model = make_model()
     if len(sys.argv) == 4:
@@ -98,8 +102,8 @@ def main():
     # tboard_callback = keras.callbacks.TensorBoard(log_dir="logs", histogram_freq=1, profile_batch="500,520")
 
     history = model.fit(
-        train_inputs,
-        train_outputs,
+        [train_ixis, train_prev_moves],
+        train_results,
         epochs=N_EPOCHS,
         batch_size=8192,
         validation_split=VAL_PORTION,
@@ -115,16 +119,16 @@ def main():
 
     print("Test:")
     model.evaluate(
-        test_inputs,
-        test_outputs,
+        [test_ixis, test_prev_moves],
+        test_results,
     )
 
     if True:  # Print some specific predictions
         print("Example test predictions:")
-        preds = model.predict(test_inputs[:512])
-        for pred, output in zip(preds[:32], test_outputs):
-            print(pred, pred.round(), output)
-        res = preds.round().astype(int) == test_outputs[: len(preds)]
+        preds = model.predict([test_ixis[:512], test_results[:512]])
+        for pred, result in zip(preds[:32], test_results):
+            print(pred, pred.round(), result)
+        res = preds.round().astype(int) == test_results[: len(preds)]
         print(np.mean(res))
 
 
