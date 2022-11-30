@@ -101,7 +101,7 @@ def main():
         train_inputs,
         train_outputs,
         epochs=N_EPOCHS,
-        batch_size=2048,
+        batch_size=8192,
         validation_split=VAL_PORTION,
         # callbacks=[tboard_callback],
     )
