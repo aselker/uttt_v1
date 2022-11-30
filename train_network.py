@@ -12,7 +12,7 @@ from tensorflow import keras
 
 # Preprocessing
 DROP_BEFORE = 6
-LIMIT_EXAMPLE_COUNT = 10_000_000
+LIMIT_EXAMPLE_COUNT = 25_000_000
 
 # Training
 N_EPOCHS = 256
@@ -95,7 +95,7 @@ def main():
     if len(sys.argv) == 4:
         model.load_weights(sys.argv[3])
 
-    # 0.01 too high.  I think Keras defaults to 0.001.
+    # 0.01 too high.  I think Keras defaults to 0.001.  Karpathy constant == 0.0003
     optimizer = keras.optimizers.Adam(learning_rate=0.0001)
     model.compile(optimizer=optimizer, loss=loss)
 
