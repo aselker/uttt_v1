@@ -7,19 +7,28 @@ import matplotlib.pyplot as plt
 
 from nn_common import make_model
 
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
+import tensorflow as tf
 from tensorflow import keras
 
 # Preprocessing
-DROP_BEFORE = 6
-LIMIT_EXAMPLE_COUNT = 25_000_000
+DROP_BEFORE = None
+LIMIT_EXAMPLE_COUNT = None
 
 # Training
-N_EPOCHS = 256
-VAL_PORTION = 0.01
+N_EPOCHS = 512
 TEST_PORTION = 0.01
+BATCH_SIZE = 8192
+LEARN_RATE = 0.0003  # 0.01 too high.  I think Keras defaults to 0.001.  Karpathy constant == 0.0003
+
 
 np.set_printoptions(precision=32)
+
+# Allocate GPU memory dynamically.
+gpus = tf.config.experimental.list_physical_devices("GPU")
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 
 def loss(y_true, y_pred):
@@ -39,7 +48,7 @@ def ingest_and_regurgitate(in_path, out_path):
             if len(history) == 2 and isinstance(history[0], tuple):
                 history = history[1]  # Drop bot names
 
-            if DROP_BEFORE is not None and len(history) > DROP_BEFORE:
+            if DROP_BEFORE and len(history) > DROP_BEFORE:
                 history = history[-DROP_BEFORE:]
 
             eventual_victory_state = history[-1].victory_state()
@@ -70,6 +79,21 @@ def ingest_and_regurgitate(in_path, out_path):
         np.savez(f, ixis=ixis, prev_moves=prev_moves, results=results)
 
 
+class SequenceFromNumpyArrays(tf.keras.utils.Sequence):
+    def __init__(self, batch_size, ixis, prev_moves, results):
+        self.ixis = ixis
+        self.prev_moves = prev_moves
+        self.results = results
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return int(np.ceil(len(self.results) / self.batch_size))
+
+    def __getitem__(self, index):
+        index_slice = slice(index * self.batch_size, (index + 1) * self.batch_size)
+        return [self.ixis[index_slice], self.prev_moves[index_slice]], self.results[index_slice]
+
+
 def main():
     if sys.argv[1] == "preprocess":
         ingest_and_regurgitate(sys.argv[2], sys.argv[3])
@@ -93,22 +117,29 @@ def main():
     test_results = all_results[train_count:]
     print(len(train_ixis), "train pairs,", len(test_ixis), "test pairs")
 
+    # # Explicitly move training data onto the CPU?
+    # with tf.device("/CPU:0"):
+    #     train_ixis = tf.convert_to_tensor(train_ixis)
+    #     test_ixis = tf.convert_to_tensor(test_ixis)
+    #     train_prev_moves = tf.convert_to_tensor(train_prev_moves)
+    #     test_prev_moves = tf.convert_to_tensor(test_prev_moves)
+    #     train_results = tf.convert_to_tensor(train_results)
+    #     test_results = tf.convert_to_tensor(test_results)
+    train_sequence = SequenceFromNumpyArrays(BATCH_SIZE, train_ixis, train_prev_moves, train_results)
+
     model = make_model()
     if len(sys.argv) == 4:
         model.load_weights(sys.argv[3])
 
-    # 0.01 too high.  I think Keras defaults to 0.001.  Karpathy constant == 0.0003
-    optimizer = keras.optimizers.Adam(learning_rate=0.0001)
+    optimizer = keras.optimizers.Adam(learning_rate=LEARN_RATE)
     model.compile(optimizer=optimizer, loss=loss)
 
     # tboard_callback = keras.callbacks.TensorBoard(log_dir="logs", histogram_freq=1, profile_batch="500,520")
 
     history = model.fit(
-        [train_ixis, train_prev_moves],
-        train_results,
+        train_sequence,
         epochs=N_EPOCHS,
-        batch_size=8192,
-        validation_split=VAL_PORTION,
+        validation_data=([test_ixis, test_prev_moves], test_results),
         # callbacks=[tboard_callback],
     )
 
