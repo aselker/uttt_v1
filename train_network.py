@@ -19,6 +19,8 @@ N_EPOCHS = 256
 VAL_PORTION = 0.01
 TEST_PORTION = 0.01
 
+np.set_printoptions(precision=32)
+
 
 def loss(y_true, y_pred):
     return keras.losses.binary_crossentropy(from_logits=False, y_true=(y_true + 1.0) / 2.0, y_pred=(y_pred + 1.0) / 2.0)
@@ -125,7 +127,7 @@ def main():
 
     if True:  # Print some specific predictions
         print("Example test predictions:")
-        preds = model.predict([test_ixis[:512], test_results[:512]])
+        preds = model.predict([test_ixis[:512], test_prev_moves[:512]])
         for pred, result in zip(preds[:32], test_results):
             print(pred, pred.round(), result)
         res = preds.round().astype(int) == test_results[: len(preds)]
