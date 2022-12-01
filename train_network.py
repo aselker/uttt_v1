@@ -12,6 +12,7 @@ from tensorflow import keras
 
 # Preprocessing
 DROP_BEFORE = 6
+DROP_LAST = True
 LIMIT_EXAMPLE_COUNT = 25_000_000
 
 # Training
@@ -46,7 +47,8 @@ def ingest_and_regurgitate(in_path, out_path):
             if eventual_victory_state == 2:
                 eventual_victory_state = 0
             eventual_victory_state = float(eventual_victory_state)
-            for state_index, state_ in enumerate(history):
+            history_ = history[:1] if DROP_LAST else history
+            for state_index, state_ in enumerate(history_):
                 # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
                 value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
                 prev_move = np.zeros((3, 3))
