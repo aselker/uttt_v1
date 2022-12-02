@@ -1,9 +1,16 @@
 import os
+import numpy as np
+import state
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 import tensorflow as tf
 from tensorflow import keras
-import numpy as np
+
+
+# Allocate GPU memory dynamically.
+gpus = tf.config.experimental.list_physical_devices("GPU")
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 
 def make_model():
@@ -33,3 +40,10 @@ def make_model():
     output = keras.layers.Dense(1, activation="tanh")(ixi_intermediate)
 
     return keras.Model([ixi_input, prev_move_input], output)
+
+
+def call_model_on_states(model, states):
+    prev_moves = np.zeros((len(states), 3, 3))
+    for i, state_ in enumerate(states):
+        prev_moves[i, state_.prev_move[2], state_.prev_move[3]] = 1
+    return model.predict([np.array([state_.ixi for state_ in states]), prev_moves], verbose=False)[0]

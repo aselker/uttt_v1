@@ -14,7 +14,7 @@ from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 4
+NUM_GAMES_PER_MATCHUP = 8
 NUM_PREFILLED_EACH = 20
 SOMETIMES_UNEQUAL = False
 RUN_FOREVER = False
@@ -84,7 +84,7 @@ def main():
     assert len(sys.argv) == 2
 
     for epoch in itertools.count():
-        bots = [HumanBot(), MultiPlyNnBot("training_data/trained_models/6_layers_again.model", [8, 5])]
+        bots = [MctsBot(1000), MultiPlyNnBot("training_data/trained_models/all.model", [8, 5])]
 
         # Make sure names are unique
         assert len([bot.name for bot in bots]) == len({bot.name for bot in bots})

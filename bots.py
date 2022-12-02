@@ -1,6 +1,6 @@
 import numpy as np
 from mcts import Mcts
-from nn_common import make_model
+import nn_common
 
 
 class ValueFunctionBot:
@@ -29,7 +29,7 @@ class MctsBot(ValueFunctionBot):
 
 class SimpleNnBot(ValueFunctionBot):
     def __init__(self, filename):
-        self.nn = make_model()
+        self.nn = nn_common.make_model()
         self.nn.load_weights(filename)
 
         def value_function(state_):
@@ -51,7 +51,7 @@ class MultiPlyNnBot(ValueFunctionBot):
             return 0 if victory_state == 2 else victory_state
 
         if len(remaining_plies) == 0:
-            return self.nn.predict(np.array([state_.ixi]), verbose=False)[0][0]
+            return nn_common.call_model_on_states(self.nn, [state_])[0]
 
         possible_moves = state_.list_valid_moves()
         values = []
@@ -60,13 +60,11 @@ class MultiPlyNnBot(ValueFunctionBot):
             possible_state = state_.copy()
             possible_state.move(possible_move)
             possible_states.append(possible_state)
-            value = self.nn.predict(np.array([possible_state.ixi]), verbose=False)[0][0]
+            value = nn_common.call_model_on_states(self.nn, [possible_state])[0]
             value = -value  # Because we want to leave the next player in the worst-possible state
             values.append(value)
 
-        values, possible_moves, possible_states = zip(
-            *sorted(zip(values, possible_moves, possible_states), key=lambda p: -p[0])
-        )
+        values, possible_moves, possible_states = zip(*sorted(zip(values, possible_moves, possible_states), key=lambda p: -p[0]))
 
         next_values = []
         for possible_state in possible_states[: remaining_plies[0]]:
@@ -75,7 +73,7 @@ class MultiPlyNnBot(ValueFunctionBot):
 
     def __init__(self, filename, plies):
         self.plies = plies
-        self.nn = make_model()
+        self.nn = nn_common.make_model()
         self.nn.load_weights(filename)
         super().__init__(self.value_function, "MultiPlyNnBot_" + filename + "_" + str(plies))
 
