@@ -18,7 +18,7 @@ DROP_LAST = True
 LIMIT_EXAMPLE_COUNT = None
 
 # Training
-N_EPOCHS = 512
+N_EPOCHS = 8
 TEST_PORTION = 0.01
 BATCH_SIZE = 8192
 LEARN_RATE = 0.0003  # 0.01 too high.  I think Keras defaults to 0.001.  Karpathy constant == 0.0003

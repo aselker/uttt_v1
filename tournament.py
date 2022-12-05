@@ -14,10 +14,10 @@ from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 8
+NUM_GAMES_PER_MATCHUP = 4
 NUM_PREFILLED_EACH = 20
 SOMETIMES_UNEQUAL = False
-RUN_FOREVER = False
+RUN_FOREVER = True
 
 
 def generate_partially_full_state():
@@ -84,10 +84,12 @@ def main():
     assert len(sys.argv) == 2
 
     for epoch in itertools.count():
-        bots = [MctsBot(1000), MultiPlyNnBot("training_data/trained_models/all.model", [8, 5])]
+        print("Starting epoch", epoch)
+        bots = [MultiPlyNnBot("training_data/trained_models/all.model", [8, 5]), MultiPlyNnBot("training_data/trained_models/all.model", [8, 5])]
+        bots[1].name = bots[1].name + "_2"
 
         # Make sure names are unique
-        assert len([bot.name for bot in bots]) == len({bot.name for bot in bots})
+        assert len(bots) == len({bot.name for bot in bots})
 
         # All pairs, in alphabetical order
         matchups = list(itertools.combinations(bots, 2))
@@ -95,7 +97,9 @@ def main():
         # Play the round robin
         histories = []
         for bot1, bot2 in matchups:
+            print("Starting matchup:", bot1.name, bot2.name)
             for game_index in range(NUM_GAMES_PER_MATCHUP):
+                print("Starting game", game_index)
                 if game_index % 2:
                     even_bot = bot1
                     odd_bot = bot2
@@ -126,6 +130,6 @@ def main():
 
 
 if __name__ == "__main__":
-    tf.config.threading.set_intra_op_parallelism_threads(16)
+    # tf.config.threading.set_intra_op_parallelism_threads(16)
     warnings.simplefilter("error", np.VisibleDeprecationWarning)
     main()
