@@ -43,7 +43,18 @@ def make_model():
 
 
 def call_model_on_states(model, states):
+    if isinstance(states, state.State):
+        was_single = True
+        states = [states]
+    else:
+        was_single=False
+
     prev_moves = np.zeros((len(states), 3, 3))
     for i, state_ in enumerate(states):
         prev_moves[i, state_.prev_move[2], state_.prev_move[3]] = 1
-    return model.predict([np.array([state_.ixi for state_ in states]), prev_moves], verbose=False)[0]
+    prediction = model.predict([np.array([state_.ixi for state_ in states]), prev_moves], verbose=False)[:, 0]
+
+    if was_single:
+        return prediction[0]
+    else:
+        return prediction

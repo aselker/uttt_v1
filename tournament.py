@@ -8,7 +8,7 @@ import tensorflow as tf
 
 from state import State
 import ixi
-from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot
+from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot, FasterMultiPlyNnBot
 
 """
 Round-robin tournament.
@@ -85,8 +85,10 @@ def main():
 
     for epoch in itertools.count():
         print("Starting epoch", epoch)
-        bots = [MultiPlyNnBot("training_data/trained_models/all.model", [8, 5]), MultiPlyNnBot("training_data/trained_models/all.model", [8, 5])]
-        bots[1].name = bots[1].name + "_2"
+        bots = [
+            MultiPlyNnBot("training_data/trained_models/all.model", [8, 5]),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [8, 5]),
+        ]
 
         # Make sure names are unique
         assert len(bots) == len({bot.name for bot in bots})
