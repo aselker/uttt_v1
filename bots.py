@@ -61,23 +61,24 @@ class MultiPlyNnBot(ValueFunctionBot):
             possible_state.move(possible_move)
             possible_states.append(possible_state)
             value = nn_common.call_model_on_states(self.nn, [possible_state])[0]
-            value = -value  # Because we want to leave the next player in the worst-possible state
+            if self.old_behavior: # XXX
+                value = -value  # Because we want to leave the next player in the worst-possible state
             values.append(value)
 
-        values, possible_moves, possible_states = zip(
-            *sorted(zip(values, possible_moves, possible_states), key=lambda p: -p[0])
-        )
+        # Sort by ascending negative value -> best ones first
+        values, possible_moves, possible_states = zip(*sorted(zip(values, possible_moves, possible_states), key=lambda p: -p[0]))
 
         next_values = []
         for possible_state in possible_states[: remaining_plies[0]]:
             next_values.append(self._value_function_helper(possible_state, remaining_plies[1:]))
         return -min(next_values)
 
-    def __init__(self, filename, plies):
+    def __init__(self, filename, plies, old_behavior=False):
         self.plies = plies
         self.nn = nn_common.make_model()
         self.nn.load_weights(filename)
-        super().__init__(self.value_function, "MultiPlyNnBot_" + filename + "_" + str(plies))
+        self.old_behavior = old_behavior
+        super().__init__(self.value_function, "MultiPlyNnBot_" + filename + "_" + str(plies) + str(old_behavior))
 
 
 class FasterMultiPlyNnBot:
@@ -94,11 +95,13 @@ class FasterMultiPlyNnBot:
             possible_states.append(state_.copy())
             possible_states[-1].move(possible_move)
         values = self.get_values(possible_states, self.plies)
-        return possible_moves[-np.argmin(values)]
+        return possible_moves[np.argmin(values)]
+
+    def value_function(self, state_):
+        """For debug only"""
+        return self.get_values([state_], self.plies)[0]
 
     def get_values(self, states, remaining_plies):
-        """Like get_value, but does multiple states at once."""
-
         # Child states are states that we could choose to leave the opponent in, by making some move.
         child_states_flat = []
         child_states_ragged = []
@@ -118,12 +121,11 @@ class FasterMultiPlyNnBot:
 
         # If all child states are won or tied, don't bother with NN etc.
         if all(finished_victory_states):
-            return [
-                (0 if finished_victory_state == 2 else -finished_victory_state)
-                for finished_victory_state in finished_victory_states
-            ]
+            return [(0 if finished_victory_state == 2 else finished_victory_state) for finished_victory_state in finished_victory_states]
 
         # Child values are positive if we leave the opponent in a good position.
+        # TODO: Check victory states of child states?  Or just trust the NN to notice them?
+        # TODO: Skip this step if remaining_plies[0] > max(len(child_states_ragged))
         child_values_flat = nn_common.call_model_on_states(self.nn, child_states_flat)
 
         child_values_ragged = []
@@ -144,8 +146,8 @@ class FasterMultiPlyNnBot:
                 if not child_states:  # skip if was finished (victory_state != 0)
                     best_states_ragged.append([])
                 else:
-                    # Sort by worst, since we want to leave the opponent in the worst state.
-                    _, sorted_states = zip(*sorted(zip(child_values, child_states), key=lambda p: -p[0]))
+                    # Sort by ascending value, since we want to leave the opponent in the worst state.
+                    _, sorted_states = zip(*sorted(zip(child_values, child_states), key=lambda p: p[0]))
                     best_states_ragged.append(sorted_states[: remaining_plies[0]])
                     best_states_flat += sorted_states[: remaining_plies[0]]
 
@@ -160,7 +162,8 @@ class FasterMultiPlyNnBot:
         values = []
         for finished_victory_state, best_values in zip(finished_victory_states, best_values_ragged):
             if finished_victory_state:
-                values.append(0 if finished_victory_state == 2 else -finished_victory_state)
+                # If we're passed a state that's been won by o, that means it's a bad state for us.  So don't invert.
+                values.append(0 if finished_victory_state == 2 else finished_victory_state)
             else:
                 values.append(-min(best_values))  # We can put them in the worst possible state
 

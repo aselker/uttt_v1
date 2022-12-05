@@ -14,10 +14,10 @@ from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot, Faste
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 4
+NUM_GAMES_PER_MATCHUP = 8
 NUM_PREFILLED_EACH = 20
 SOMETIMES_UNEQUAL = False
-RUN_FOREVER = True
+RUN_FOREVER = False
 
 
 def generate_partially_full_state():
@@ -86,12 +86,15 @@ def main():
     for epoch in itertools.count():
         print("Starting epoch", epoch)
         bots = [
-            MultiPlyNnBot("training_data/trained_models/all.model", [8, 5]),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [8, 5]),
+            # MultiPlyNnBot("training_data/trained_models/all.model", [3]),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [3]),
+            MultiPlyNnBot("training_data/trained_models/all.model", [3, 1], old_behavior=True),
         ]
 
         # Make sure names are unique
-        assert len(bots) == len({bot.name for bot in bots})
+        if not len(bots) == len({bot.name for bot in bots}):
+            for i, bot in enumerate(bots):
+                bot.name = str(i) + "_" + bot.name
 
         # All pairs, in alphabetical order
         matchups = list(itertools.combinations(bots, 2))
