@@ -64,7 +64,9 @@ class MultiPlyNnBot(ValueFunctionBot):
             value = -value  # Because we want to leave the next player in the worst-possible state
             values.append(value)
 
-        values, possible_moves, possible_states = zip(*sorted(zip(values, possible_moves, possible_states), key=lambda p: -p[0]))
+        values, possible_moves, possible_states = zip(
+            *sorted(zip(values, possible_moves, possible_states), key=lambda p: -p[0])
+        )
 
         next_values = []
         for possible_state in possible_states[: remaining_plies[0]]:
@@ -79,21 +81,106 @@ class MultiPlyNnBot(ValueFunctionBot):
 
 
 class FasterMultiPlyNnBot:
+    def __init__(self, filename, plies):
+        self.plies = plies
+        self.nn = nn_common.make_model()
+        self.nn.load_weights(filename)
+        self.name = "FasterMultiPlyNnBot_" + filename
+
     def get_move(self, state_):
         possible_moves = state_.list_valid_moves()
-        possible_states = [state_.copy().move(possible_move) for possible_move in possible_moves]
-        values = self.get_values(possible_states)
-        return possible_moves[np.argmax(values)]
+        possible_states = []
+        for possible_move in possible_moves:
+            possible_states.append(state_.copy())
+            possible_states[-1].move(possible_move)
+        values = self.get_values(possible_states, self.plies)
+        return possible_moves[-np.argmin(values)]
 
     def get_values(self, states, remaining_plies):
-        """Like get_value, but takes and returns multiple states."""
-        all_possible_states
-        for state_ in states:
-            possible_moves = state_.list_valid_moves()
-            possible_states = [state_.copy().move(possible_move) for possible_move in possible_moves]
-            all_possible_states += possible_states
+        """Like get_value, but does multiple states at once."""
 
-        this_ply_values = self.nn.predict(np.array([all_possible_state.ixi]), verbose=False)[0][0]
+        # Child states are states that we could choose to leave the opponent in, by making some move.
+        child_states_flat = []
+        child_states_ragged = []
+        finished_victory_states = np.zeros(len(states))
+        for i, state_ in enumerate(states):
+            if vs := state_.victory_state():
+                finished_victory_states[i] = vs
+                child_states_ragged.append([])
+            else:
+                possible_moves = state_.list_valid_moves()
+                possible_states = []
+                for possible_move in possible_moves:
+                    possible_states.append(state_.copy())
+                    possible_states[-1].move(possible_move)
+                child_states_ragged.append(possible_states)
+                child_states_flat += possible_states
+
+        # If all child states are won or tied, don't bother with NN etc.
+        if all(finished_victory_states):
+            return [
+                (0 if finished_victory_state == 2 else -finished_victory_state)
+                for finished_victory_state in finished_victory_states
+            ]
+
+        # Child values are positive if we leave the opponent in a good position.
+        child_values_flat = nn_common.call_model_on_states(self.nn, child_states_flat)
+
+        child_values_ragged = []
+        for i, child_states in enumerate(child_states_ragged):
+            child_values_ragged.append(child_values_flat[: len(child_states)])
+            child_values_flat = child_values_flat[len(child_states) :]
+
+        if remaining_plies == []:
+            best_values_ragged = child_values_ragged
+        else:
+            # The recursive part.
+            # Sort each state's children by value; make a flattened list of the best ones; run get_values on it;
+            # find the best ones for each state; return those.
+
+            best_states_ragged = []
+            best_states_flat = []
+            for child_states, child_values in zip(child_states_ragged, child_values_ragged):
+                if not child_states:  # skip if was finished (victory_state != 0)
+                    best_states_ragged.append([])
+                else:
+                    # Sort by worst, since we want to leave the opponent in the worst state.
+                    _, sorted_states = zip(*sorted(zip(child_values, child_states), key=lambda p: -p[0]))
+                    best_states_ragged.append(sorted_states[: remaining_plies[0]])
+                    best_states_flat += sorted_states[: remaining_plies[0]]
+
+            # best_values is like child_values, so negative is good for us.
+            best_values_flat = self.get_values(best_states_flat, remaining_plies[1:])
+
+            best_values_ragged = []
+            for i, best_states in enumerate(best_states_ragged):
+                best_values_ragged.append(best_values_flat[: len(best_states)])
+                best_values_flat = best_values_flat[len(best_states) :]
+
+        values = []
+        for finished_victory_state, best_values in zip(finished_victory_states, best_values_ragged):
+            if finished_victory_state:
+                values.append(0 if finished_victory_state == 2 else -finished_victory_state)
+            else:
+                values.append(-min(best_values))  # We can put them in the worst possible state
+
+        if False:
+            print("Best:", np.argmax(values), max(values))
+            print(states[np.argmax(values)])
+            print("Quick prediction:", nn_common.call_model_on_states(self.nn, states[np.argmax(values)]))
+            print("Worst:", np.argmin(values), min(values))
+            print(states[np.argmin(values)])
+            print("Quick prediction:", nn_common.call_model_on_states(self.nn, states[np.argmin(values)]))
+
+            import matplotlib.pyplot as plt
+
+            quick_values = nn_common.call_model_on_states(self.nn, states)
+            plt.plot(values, quick_values, ".")
+            plt.show()
+
+            breakpoint()
+
+        return values
 
 
 class RandomBot:
