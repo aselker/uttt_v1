@@ -8,7 +8,7 @@ import tensorflow as tf
 
 from state import State
 import ixi
-from bots import MctsBot, SimpleNnBot, RandomBot, MultiPlyNnBot, HumanBot, FasterMultiPlyNnBot
+from bots import MctsBot, SimpleNnBot, RandomBot, SlowerMultiPlyNnBot, HumanBot, FasterMultiPlyNnBot
 
 """
 Round-robin tournament.
@@ -88,7 +88,7 @@ def main():
         bots = [
             # MultiPlyNnBot("training_data/trained_models/all.model", [3]),
             FasterMultiPlyNnBot("training_data/trained_models/all.model", [3]),
-            MultiPlyNnBot("training_data/trained_models/all.model", [3, 1], old_behavior=True),
+            SlowerMultiPlyNnBot("training_data/trained_models/all.model", [3, 1], old_behavior=True),
         ]
 
         # Make sure names are unique

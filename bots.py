@@ -38,7 +38,7 @@ class SimpleNnBot(ValueFunctionBot):
         super().__init__(value_function, "SimpleNnBot_" + filename)
 
 
-class MultiPlyNnBot(ValueFunctionBot):
+class SlowerMultiPlyNnBot(ValueFunctionBot):
     """
     TODO: Make this less loopy, but instead look at all of ply N at the same time.  More efficent.
     """
@@ -61,8 +61,7 @@ class MultiPlyNnBot(ValueFunctionBot):
             possible_state.move(possible_move)
             possible_states.append(possible_state)
             value = nn_common.call_model_on_states(self.nn, [possible_state])[0]
-            if self.old_behavior: # XXX
-                value = -value  # Because we want to leave the next player in the worst-possible state
+            value = -value  # Because we want to leave the next player in the worst-possible state
             values.append(value)
 
         # Sort by ascending negative value -> best ones first
@@ -73,12 +72,11 @@ class MultiPlyNnBot(ValueFunctionBot):
             next_values.append(self._value_function_helper(possible_state, remaining_plies[1:]))
         return -min(next_values)
 
-    def __init__(self, filename, plies, old_behavior=False):
+    def __init__(self, filename, plies):
         self.plies = plies
         self.nn = nn_common.make_model()
         self.nn.load_weights(filename)
-        self.old_behavior = old_behavior
-        super().__init__(self.value_function, "MultiPlyNnBot_" + filename + "_" + str(plies) + str(old_behavior))
+        super().__init__(self.value_function, "MultiPlyNnBot_" + filename + "_" + str(plies))
 
 
 class FasterMultiPlyNnBot:
@@ -96,10 +94,6 @@ class FasterMultiPlyNnBot:
             possible_states[-1].move(possible_move)
         values = self.get_values(possible_states, self.plies)
         return possible_moves[np.argmin(values)]
-
-    def value_function(self, state_):
-        """For debug only"""
-        return self.get_values([state_], self.plies)[0]
 
     def get_values(self, states, remaining_plies):
         # Child states are states that we could choose to leave the opponent in, by making some move.
@@ -123,10 +117,13 @@ class FasterMultiPlyNnBot:
         if all(finished_victory_states):
             return [(0 if finished_victory_state == 2 else finished_victory_state) for finished_victory_state in finished_victory_states]
 
-        # Child values are positive if we leave the opponent in a good position.
-        # TODO: Check victory states of child states?  Or just trust the NN to notice them?
+        # Child values are positive if we leave the opponent in a good position.  First check their victory states; then, if
+        # they're not finished, run the NN.
         # TODO: Skip this step if remaining_plies[0] > max(len(child_states_ragged))
-        child_values_flat = nn_common.call_model_on_states(self.nn, child_states_flat)
+        child_values_flat = np.array([state_.victory_state() for state_ in child_states_flat], dtype=float)
+        unfinished = child_values_flat==0
+        child_values_flat[child_values_flat==2] = 0
+        child_values_flat[unfinished] = nn_common.call_model_on_states(self.nn, np.array(child_states_flat, dtype=object)[unfinished])
 
         child_values_ragged = []
         for i, child_states in enumerate(child_states_ragged):
