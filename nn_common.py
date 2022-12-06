@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import state
+import gc
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Disable TensorFlow info messages, but not warnings or higher.
 import tensorflow as tf
@@ -53,6 +54,9 @@ def call_model_on_states(model, states):
     for i, state_ in enumerate(states):
         prev_moves[i, state_.prev_move[2], state_.prev_move[3]] = 1
     prediction = model.predict([np.array([state_.ixi for state_ in states]), prev_moves], verbose=False)[:, 0]
+
+    keras.backend.clear_session()
+    gc.collect()
 
     if was_single:
         return prediction[0]

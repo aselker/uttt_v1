@@ -86,8 +86,8 @@ def main():
     for epoch in itertools.count():
         print("Starting epoch", epoch)
         bots = [
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [99,5]),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [99,5]),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [99, 5]),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [99, 5]),
         ]
 
         # Make sure names are unique
@@ -122,11 +122,18 @@ def main():
                     if victory_state:
                         break
 
-        # TODO: Use first nonexistent filename instead of epoch number
-        filename = Path(sys.argv[1]) / (str(epoch) + ".pkl")
+        # There's a race condition here!  Fortunately, nothing bad will happen.
+        existing_pkls = Path(sys.argv[1]).glob("*.pkl")
+        for i in itertools.count():
+            filename = Path(Path(sys.argv[1]) / (str(i) + ".pkl"))
+            if filename not in existing_pkls:
+                break
+
         with open(filename, "wb") as f:
             # pickle.dump([h[1] for h in histories], f)
             pickle.dump(histories, f)
+
+        print("Written to", filename)
 
         summarize_histories(histories)
 
