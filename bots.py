@@ -38,53 +38,19 @@ class SimpleNnBot(ValueFunctionBot):
         super().__init__(value_function, "SimpleNnBot_" + filename)
 
 
-class SlowerMultiPlyNnBot(ValueFunctionBot):
-    """
-    TODO: Make this less loopy, but instead look at all of ply N at the same time.  More efficent.
-    """
-
-    def value_function(self, state_):
-        return self._value_function_helper(state_, self.plies)
-
-    def _value_function_helper(self, state_, remaining_plies):
-        if victory_state := state_.victory_state():
-            return 0 if victory_state == 2 else victory_state
-
-        if len(remaining_plies) == 0:
-            return nn_common.call_model_on_states(self.nn, [state_])[0]
-
-        possible_moves = state_.list_valid_moves()
-        values = []
-        possible_states = []
-        for possible_move in possible_moves:
-            possible_state = state_.copy()
-            possible_state.move(possible_move)
-            possible_states.append(possible_state)
-            value = nn_common.call_model_on_states(self.nn, [possible_state])[0]
-            value = -value  # Because we want to leave the next player in the worst-possible state
-            values.append(value)
-
-        # Sort by ascending negative value -> best ones first
-        values, possible_moves, possible_states = zip(*sorted(zip(values, possible_moves, possible_states), key=lambda p: -p[0]))
-
-        next_values = []
-        for possible_state in possible_states[: remaining_plies[0]]:
-            next_values.append(self._value_function_helper(possible_state, remaining_plies[1:]))
-        return -min(next_values)
-
-    def __init__(self, filename, plies):
-        self.plies = plies
-        self.nn = nn_common.make_model()
-        self.nn.load_weights(filename)
-        super().__init__(self.value_function, "MultiPlyNnBot_" + filename + "_" + str(plies))
-
 
 class FasterMultiPlyNnBot:
-    def __init__(self, filename, plies):
+    def __init__(self, filename, plies, deterministic=False):
         self.plies = plies
         self.nn = nn_common.make_model()
         self.nn.load_weights(filename)
+        self.deterministic = deterministic
         self.name = "FasterMultiPlyNnBot_" + filename + "_" + str(plies)
+        if deterministic:
+            self.name = self.name + "_deterministic"
+
+    def __str__(self):
+        return self.name
 
     def get_move(self, state_):
         possible_moves = state_.list_valid_moves()
@@ -93,7 +59,19 @@ class FasterMultiPlyNnBot:
             possible_states.append(state_.copy())
             possible_states[-1].move(possible_move)
         values = self.get_values(possible_states, self.plies)
-        return possible_moves[np.argmin(values)]
+        if self.deterministic:
+            return possible_moves[np.argmin(values)]
+        else:
+            values = np.array(values)
+            if any(values == -1):  # If we can win, do.  Maybe this could be removed?
+                return possible_moves[np.argmin(values)]
+            if all(values == values[0]): # Equal values, pick randomly.  Useful when all are value 1.
+                return possible_moves[np.random.choice(np.arange(len(possible_moves)))]
+            assert np.all(values > -1) # Avoid 1/0
+            weights = 1 / (1 + (values - 1) / 2) - 1
+            assert np.all(0 <= weights) # Negative weight?  Could just clip value I think, /shrug
+            weights /= np.sum(weights)
+            return possible_moves[np.random.choice(np.arange(len(possible_moves)), p=weights)]
 
     def get_values(self, states, remaining_plies):
         # Child states are states that we could choose to leave the opponent in, by making some move.
