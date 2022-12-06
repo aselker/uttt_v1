@@ -123,9 +123,9 @@ def main():
                         break
 
         # There's a race condition here!  Fortunately, nothing bad will happen.
-        existing_pkls = Path(sys.argv[1]).glob("*.pkl")
+        existing_pkls = set(Path(sys.argv[1]).glob("*.pkl"))
         for i in itertools.count():
-            filename = Path(Path(sys.argv[1]) / (str(i) + ".pkl"))
+            filename = Path(sys.argv[1]) / (str(i) + ".pkl")
             if filename not in existing_pkls:
                 break
 
