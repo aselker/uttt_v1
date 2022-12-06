@@ -17,7 +17,7 @@ Round-robin tournament.
 NUM_GAMES_PER_MATCHUP = 8
 NUM_PREFILLED_EACH = 20
 SOMETIMES_UNEQUAL = False
-RUN_FOREVER = False
+RUN_FOREVER = True
 
 
 def generate_partially_full_state():
@@ -86,9 +86,8 @@ def main():
     for epoch in itertools.count():
         print("Starting epoch", epoch)
         bots = [
-            # MultiPlyNnBot("training_data/trained_models/all.model", [3]),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [3]),
-            SlowerMultiPlyNnBot("training_data/trained_models/all.model", [3, 1], old_behavior=True),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [99,5]),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [99,5]),
         ]
 
         # Make sure names are unique
@@ -123,6 +122,7 @@ def main():
                     if victory_state:
                         break
 
+        # TODO: Use first nonexistent filename instead of epoch number
         filename = Path(sys.argv[1]) / (str(epoch) + ".pkl")
         with open(filename, "wb") as f:
             # pickle.dump([h[1] for h in histories], f)

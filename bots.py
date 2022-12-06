@@ -84,7 +84,7 @@ class FasterMultiPlyNnBot:
         self.plies = plies
         self.nn = nn_common.make_model()
         self.nn.load_weights(filename)
-        self.name = "FasterMultiPlyNnBot_" + filename
+        self.name = "FasterMultiPlyNnBot_" + filename + "_" + str(plies)
 
     def get_move(self, state_):
         possible_moves = state_.list_valid_moves()
@@ -123,7 +123,8 @@ class FasterMultiPlyNnBot:
         child_values_flat = np.array([state_.victory_state() for state_ in child_states_flat], dtype=float)
         unfinished = child_values_flat==0
         child_values_flat[child_values_flat==2] = 0
-        child_values_flat[unfinished] = nn_common.call_model_on_states(self.nn, np.array(child_states_flat, dtype=object)[unfinished])
+        if np.any(unfinished): # Don't run on empty list, it makes Keras unhappy
+            child_values_flat[unfinished] = nn_common.call_model_on_states(self.nn, np.array(child_states_flat, dtype=object)[unfinished])
 
         child_values_ragged = []
         for i, child_states in enumerate(child_states_ragged):
