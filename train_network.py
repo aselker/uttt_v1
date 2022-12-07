@@ -103,20 +103,23 @@ def main():
 
     with open(sys.argv[2], "rb") as f:
         loaded = np.load(f)
-        all_ixis = loaded["ixis"]
-        all_prev_moves = loaded["prev_moves"]
-        all_results = loaded["results"]
+        if "ixis" in loaded: # Split after loading
+            all_ixis = loaded["ixis"]
+            all_prev_moves = loaded["prev_moves"]
+            all_results = loaded["results"]
 
-    all_results = all_results[:, np.newaxis]  # For consistency, results are 1-lists.
+            all_results = all_results[:, np.newaxis]  # For consistency, results are 1-lists.
 
-    # Split into train and test
-    train_count = int(len(all_ixis) * (1 - TEST_PORTION))
-    train_ixis = all_ixis[:train_count]
-    test_ixis = all_ixis[train_count:]
-    train_prev_moves = all_prev_moves[:train_count]
-    test_prev_moves = all_prev_moves[train_count:]
-    train_results = all_results[:train_count]
-    test_results = all_results[train_count:]
+            # Split into train and test
+            train_count = int(len(all_ixis) * (1 - TEST_PORTION))
+            train_ixis = all_ixis[:train_count]
+            test_ixis = all_ixis[train_count:]
+            train_prev_moves = all_prev_moves[:train_count]
+            test_prev_moves = all_prev_moves[train_count:]
+            train_results = all_results[:train_count]
+            test_results = all_results[train_count:]
+        else: # Split before loading 
+
     print(len(train_ixis), "train pairs,", len(test_ixis), "test pairs")
 
     # # Explicitly move training data onto the CPU?

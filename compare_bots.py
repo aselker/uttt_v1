@@ -1,13 +1,13 @@
 import numpy as np
 
 from tournament import generate_partially_full_state
-from bots import SlowerMultiPlyNnBot, FasterMultiPlyNnBot
+from bots import SimpleNnBot, FasterSimpleNnBot
 
 
 def main():
     bots = [
-        SlowerMultiPlyNnBot("training_data/trained_models/all.model", [3, 1]),
-        FasterMultiPlyNnBot("training_data/trained_models/all.model", [3]),
+        SimpleNnBot("training_data/trained_models/all.model"),
+        FasterSimpleNnBot("training_data/trained_models/all.model"),
     ]
 
     state_ = generate_partially_full_state()

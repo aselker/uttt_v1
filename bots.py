@@ -33,10 +33,26 @@ class SimpleNnBot(ValueFunctionBot):
         self.nn.load_weights(filename)
 
         def value_function(state_):
-            return self.nn.predict(np.array([state_.ixi]), verbose=False)[0][0]
+            # return self.nn.predict(np.array([state_.ixi]), verbose=False)[0][0]
+            return nn_common.call_model_on_states(self.nn, state_)
 
         super().__init__(value_function, "SimpleNnBot_" + filename)
 
+
+class FasterSimpleNnBot:
+    def __init__(self, filename):
+        self.nn = nn_common.make_model()
+        self.nn.load_weights(filename)
+        self.name = "FasterSimpleNnBot_" + filename
+
+    def get_move(self, state_):
+        possible_moves = state_.list_valid_moves()
+        possible_states = []
+        for possible_move in possible_moves:
+            possible_states.append(state_.copy())
+            possible_states[-1].move(possible_move)
+        values = nn_common.call_model_on_states(self.nn, possible_states)
+        return possible_moves[np.argmin(values)]
 
 
 class FasterMultiPlyNnBot:
@@ -65,11 +81,11 @@ class FasterMultiPlyNnBot:
             values = np.array(values)
             if any(values == -1):  # If we can win, do.  Maybe this could be removed?
                 return possible_moves[np.argmin(values)]
-            if all(values == values[0]): # Equal values, pick randomly.  Useful when all are value 1.
+            if all(values == values[0]):  # Equal values, pick randomly.  Useful when all are value 1.
                 return possible_moves[np.random.choice(np.arange(len(possible_moves)))]
-            assert np.all(values > -1) # Avoid 1/0
+            assert np.all(values > -1)  # Avoid 1/0
             weights = 1 / (1 + (values - 1) / 2) - 1
-            assert np.all(0 <= weights) # Negative weight?  Could just clip value I think, /shrug
+            assert np.all(0 <= weights)  # Negative weight?  Could just clip value I think, /shrug
             weights /= np.sum(weights)
             return possible_moves[np.random.choice(np.arange(len(possible_moves)), p=weights)]
 
@@ -93,16 +109,21 @@ class FasterMultiPlyNnBot:
 
         # If all child states are won or tied, don't bother with NN etc.
         if all(finished_victory_states):
-            return [(0 if finished_victory_state == 2 else finished_victory_state) for finished_victory_state in finished_victory_states]
+            return [
+                (0 if finished_victory_state == 2 else finished_victory_state)
+                for finished_victory_state in finished_victory_states
+            ]
 
         # Child values are positive if we leave the opponent in a good position.  First check their victory states; then, if
         # they're not finished, run the NN.
         # TODO: Skip this step if remaining_plies[0] > max(len(child_states_ragged))
         child_values_flat = np.array([state_.victory_state() for state_ in child_states_flat], dtype=float)
-        unfinished = child_values_flat==0
-        child_values_flat[child_values_flat==2] = 0
-        if np.any(unfinished): # Don't run on empty list, it makes Keras unhappy
-            child_values_flat[unfinished] = nn_common.call_model_on_states(self.nn, np.array(child_states_flat, dtype=object)[unfinished])
+        unfinished = child_values_flat == 0
+        child_values_flat[child_values_flat == 2] = 0
+        if np.any(unfinished):  # Don't run on empty list, it makes Keras unhappy
+            child_values_flat[unfinished] = nn_common.call_model_on_states(
+                self.nn, np.array(child_states_flat, dtype=object)[unfinished]
+            )
 
         child_values_ragged = []
         for i, child_states in enumerate(child_states_ragged):
