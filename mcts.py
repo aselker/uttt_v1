@@ -5,6 +5,7 @@ from nn_common import make_model
 
 
 class Mcts:
+    """Not actually Monte-Carlo tree search.  Still kinda works."""
     def __init__(self, num_playouts=2000):
         # Playouts are mappings of {game state : pair of (average playout outcome where -1 is guaranteed loss, number of playouts that have been done)}
         self.cache = {}

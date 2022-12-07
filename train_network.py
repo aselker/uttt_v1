@@ -15,7 +15,7 @@ from tensorflow import keras
 # Preprocessing
 DROP_BEFORE = None
 DROP_LAST = True
-LIMIT_EXAMPLE_COUNT = None
+LIMIT_EXAMPLE_COUNT = 1_000_000
 
 # Training
 N_EPOCHS = 8
@@ -37,13 +37,19 @@ def loss(y_true, y_pred):
 
 
 def ingest_and_regurgitate(in_path, out_path):
-    all_examples = []
+    train_examples = []
+    test_examples = []
+    n_total_pairs = 0
     filenames = Path(in_path).glob("**/*.pkl")
+    filenames = list(filenames)  # So we can shuffle them
+    np.random.shuffle(filenames)  # So if we stop early with LIMIT_EXAMPLE_COUNT, we still get an even-ish distribution.
     for filename in filenames:
         with open(filename, "rb") as f:
             histories = pickle.load(f)
 
         for history in histories:
+            do_test = np.random.rand() < TEST_PORTION
+            examples_in_which_to_save = test_examples if do_test else train_examples
 
             # sEmAnTiC vErSiOnInG
             if len(history) == 2 and isinstance(history[0], tuple):
@@ -56,29 +62,44 @@ def ingest_and_regurgitate(in_path, out_path):
             if eventual_victory_state == 2:
                 eventual_victory_state = 0
             eventual_victory_state = float(eventual_victory_state)
-            history_ = history[:1] if DROP_LAST else history
+            history_ = history[:-1] if DROP_LAST else history
             for state_index, state_ in enumerate(history_):
-                # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
+                # Parity: if the last state has victory state -1, then the last player to play won (of course).  So, the last state has
+                # value -1, since it's a losing state.  So, if len(history)==10, and state_index==9, it should not be inverted.
                 value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
                 prev_move = np.zeros((3, 3))
                 prev_move[state_.prev_move[2], state_.prev_move[3]] = 1
-                for rotation in [0, 1, 2, 3]:
+                # for rotation in [0, 1, 2, 3]:
+                for rotation in [0]:  # XXX
                     rotated_ixi = np.rot90(np.rot90(state_.ixi, axes=(2, 3), k=rotation), axes=(0, 1), k=rotation)
                     rotated_prev_move = np.rot90(prev_move, k=rotation)
-                    all_examples.append((rotated_ixi, rotated_prev_move, value))
-                    all_examples.append((rotated_ixi.transpose(1, 0, 3, 2), rotated_prev_move.T, value))  # Mirrored
+                    examples_in_which_to_save.append((rotated_ixi, rotated_prev_move, value))
+                    # examples_in_which_to_save.append((rotated_ixi.transpose(1, 0, 3, 2), rotated_prev_move.T, value))  # Mirrored # XXX
+                    n_total_pairs += 2
 
-    np.random.shuffle(all_examples)  # for plausible deniability
+        if LIMIT_EXAMPLE_COUNT and LIMIT_EXAMPLE_COUNT <= n_total_pairs:
+            break
 
-    if LIMIT_EXAMPLE_COUNT:
-        all_examples = all_examples[:LIMIT_EXAMPLE_COUNT]
+    np.random.shuffle(train_examples)  # for plausible deniability
+    np.random.shuffle(test_examples)
 
-    ixis = np.array([example[0] for example in all_examples])
-    prev_moves = np.array([example[1] for example in all_examples])
-    results = np.array([example[2] for example in all_examples])
+    train_ixis = np.array([example[0] for example in train_examples])
+    train_prev_moves = np.array([example[1] for example in train_examples])
+    train_results = np.array([example[2] for example in train_examples])
+    test_ixis = np.array([example[0] for example in test_examples])
+    test_prev_moves = np.array([example[1] for example in test_examples])
+    test_results = np.array([example[2] for example in test_examples])
 
     with open(out_path, "wb") as f:
-        np.savez(f, ixis=ixis, prev_moves=prev_moves, results=results)
+        np.savez(
+            f,
+            train_ixis=train_ixis,
+            train_prev_moves=train_prev_moves,
+            train_results=train_results,
+            test_ixis=test_ixis,
+            test_prev_moves=test_prev_moves,
+            test_results=test_results,
+        )
 
 
 class SequenceFromNumpyArrays(tf.keras.utils.Sequence):
@@ -103,7 +124,7 @@ def main():
 
     with open(sys.argv[2], "rb") as f:
         loaded = np.load(f)
-        if "ixis" in loaded: # Split after loading
+        if "ixis" in loaded:  # Split after loading
             all_ixis = loaded["ixis"]
             all_prev_moves = loaded["prev_moves"]
             all_results = loaded["results"]
@@ -118,9 +139,17 @@ def main():
             test_prev_moves = all_prev_moves[train_count:]
             train_results = all_results[:train_count]
             test_results = all_results[train_count:]
-        else: # Split before loading 
+        else:  # Split before loading
+            train_ixis = loaded["train_ixis"]
+            train_prev_moves = loaded["train_prev_moves"]
+            train_results = loaded["train_results"]
+            test_ixis = loaded["test_ixis"]
+            test_prev_moves = loaded["test_prev_moves"]
+            test_results = loaded["test_results"]
 
     print(len(train_ixis), "train pairs,", len(test_ixis), "test pairs")
+
+    breakpoint()
 
     # # Explicitly move training data onto the CPU?
     # with tf.device("/CPU:0"):

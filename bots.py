@@ -21,6 +21,7 @@ class ValueFunctionBot:
 
 
 class MctsBot(ValueFunctionBot):
+    """Not actually Monte-Carlo tree search."""
     def __init__(self, num_playouts=100):
         self.mcts = Mcts(num_playouts=num_playouts)
         name = "MctsBot" + str(num_playouts)
