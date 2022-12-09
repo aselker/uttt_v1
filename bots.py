@@ -3,6 +3,15 @@ from mcts import Mcts
 import nn_common
 
 
+def check_victory_and_call_model(model, states):
+    values = np.array([state_.victory_state() for state_ in child_states_flat], dtype=float)
+    unfinished = values == 0
+    values[values == 2] = 0
+    if np.any(unfinished):  # Don't run on empty list, it makes Keras unhappy
+        values[unfinished] = nn_common.call_model_on_states(model, np.array(child_states_flat, dtype=object)[unfinished])
+    return values
+
+
 class ValueFunctionBot:
     def __init__(self, value_function, name):
         self.value_function = value_function
@@ -22,6 +31,7 @@ class ValueFunctionBot:
 
 class MctsBot(ValueFunctionBot):
     """Not actually Monte-Carlo tree search."""
+
     def __init__(self, num_playouts=100):
         self.mcts = Mcts(num_playouts=num_playouts)
         name = "MctsBot" + str(num_playouts)
@@ -52,7 +62,7 @@ class FasterSimpleNnBot:
         for possible_move in possible_moves:
             possible_states.append(state_.copy())
             possible_states[-1].move(possible_move)
-        values = nn_common.call_model_on_states(self.nn, possible_states)
+        values = check_victory_and_call_model(self.nn, possible_states)
         return possible_moves[np.argmin(values)]
 
 
@@ -110,21 +120,12 @@ class FasterMultiPlyNnBot:
 
         # If all child states are won or tied, don't bother with NN etc.
         if all(finished_victory_states):
-            return [
-                (0 if finished_victory_state == 2 else finished_victory_state)
-                for finished_victory_state in finished_victory_states
-            ]
+            return [(0 if finished_victory_state == 2 else finished_victory_state) for finished_victory_state in finished_victory_states]
 
         # Child values are positive if we leave the opponent in a good position.  First check their victory states; then, if
         # they're not finished, run the NN.
         # TODO: Skip this step if remaining_plies[0] > max(len(child_states_ragged))
-        child_values_flat = np.array([state_.victory_state() for state_ in child_states_flat], dtype=float)
-        unfinished = child_values_flat == 0
-        child_values_flat[child_values_flat == 2] = 0
-        if np.any(unfinished):  # Don't run on empty list, it makes Keras unhappy
-            child_values_flat[unfinished] = nn_common.call_model_on_states(
-                self.nn, np.array(child_states_flat, dtype=object)[unfinished]
-            )
+        child_values_flat = check_victory_and_call_model(self.nn, child_states_flat)
 
         child_values_ragged = []
         for i, child_states in enumerate(child_states_ragged):

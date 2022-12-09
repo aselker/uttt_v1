@@ -8,16 +8,16 @@ import tensorflow as tf
 
 from state import State
 import ixi
-from bots import MctsBot, SimpleNnBot, RandomBot, HumanBot, FasterMultiPlyNnBot
+from bots import MctsBot, FasterSimpleNnBot, RandomBot, HumanBot, FasterMultiPlyNnBot
 
 """
 Round-robin tournament.
 """
 
 NUM_GAMES_PER_MATCHUP = 8
-NUM_PREFILLED_EACH = 2
+NUM_PREFILLED_EACH = 1
 SOMETIMES_UNEQUAL = False
-RUN_FOREVER = True
+RUN_FOREVER = False
 
 
 def generate_partially_full_state():
@@ -86,8 +86,10 @@ def main():
     for epoch in itertools.count():
         print("Starting epoch", epoch)
         bots = [
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [99, 5]),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [99, 3], deterministic=True),
+            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5]),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
+            FasterSimpleNnBot("training_data/trained_models/all.model"),
+            # HumanBot(),
         ]
 
         # Make sure names are unique
