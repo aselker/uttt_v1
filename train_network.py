@@ -15,10 +15,10 @@ from tensorflow import keras
 # Preprocessing
 DROP_BEFORE = None
 DROP_LAST = True
-LIMIT_EXAMPLE_COUNT = 1_000_000
+LIMIT_EXAMPLE_COUNT = None
 
 # Training
-N_EPOCHS = 8
+N_EPOCHS = 128
 TEST_PORTION = 0.01
 BATCH_SIZE = 8192
 LEARN_RATE = 0.0003  # 0.01 too high.  I think Keras defaults to 0.001.  Karpathy constant == 0.0003
@@ -69,12 +69,11 @@ def ingest_and_regurgitate(in_path, out_path):
                 value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
                 prev_move = np.zeros((3, 3))
                 prev_move[state_.prev_move[2], state_.prev_move[3]] = 1
-                # for rotation in [0, 1, 2, 3]:
-                for rotation in [0]:  # XXX
+                for rotation in [0, 1, 2, 3]:
                     rotated_ixi = np.rot90(np.rot90(state_.ixi, axes=(2, 3), k=rotation), axes=(0, 1), k=rotation)
                     rotated_prev_move = np.rot90(prev_move, k=rotation)
                     examples_in_which_to_save.append((rotated_ixi, rotated_prev_move, value))
-                    # examples_in_which_to_save.append((rotated_ixi.transpose(1, 0, 3, 2), rotated_prev_move.T, value))  # Mirrored # XXX
+                    examples_in_which_to_save.append((rotated_ixi.transpose(1, 0, 3, 2), rotated_prev_move.T, value))
                     n_total_pairs += 2
 
         if LIMIT_EXAMPLE_COUNT and LIMIT_EXAMPLE_COUNT <= n_total_pairs:
@@ -148,8 +147,6 @@ def main():
             test_results = loaded["test_results"]
 
     print(len(train_ixis), "train pairs,", len(test_ixis), "test pairs")
-
-    breakpoint()
 
     # # Explicitly move training data onto the CPU?
     # with tf.device("/CPU:0"):
