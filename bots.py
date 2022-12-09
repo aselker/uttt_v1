@@ -4,11 +4,11 @@ import nn_common
 
 
 def check_victory_and_call_model(model, states):
-    values = np.array([state_.victory_state() for state_ in child_states_flat], dtype=float)
+    values = np.array([state_.victory_state() for state_ in states], dtype=float)
     unfinished = values == 0
     values[values == 2] = 0
     if np.any(unfinished):  # Don't run on empty list, it makes Keras unhappy
-        values[unfinished] = nn_common.call_model_on_states(model, np.array(child_states_flat, dtype=object)[unfinished])
+        values[unfinished] = nn_common.call_model_on_states(model, np.array(states, dtype=object)[unfinished])
     return values
 
 
