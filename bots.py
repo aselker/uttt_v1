@@ -1,5 +1,5 @@
 import numpy as np
-from mcts import Mcts
+from mcts import Mcts, ActualMcts
 import nn_common
 
 
@@ -35,6 +35,13 @@ class MctsBot(ValueFunctionBot):
     def __init__(self, num_playouts=100):
         self.mcts = Mcts(num_playouts=num_playouts)
         name = "MctsBot" + str(num_playouts)
+        super().__init__(self.mcts.get_value, name)
+
+
+class ActualMctsBot(ValueFunctionBot):
+    def __init__(self, num_playouts=100, exploration_constant=np.sqrt(2)):
+        self.mcts = ActualMcts(num_playouts=num_playouts, exploration_constant=exploration_constant)
+        name = "ActualMctsBot" + str(num_playouts) + "_" + str(exploration_constant)
         super().__init__(self.mcts.get_value, name)
 
 

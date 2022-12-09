@@ -8,7 +8,7 @@ import tensorflow as tf
 
 from state import State
 import ixi
-from bots import MctsBot, FasterSimpleNnBot, RandomBot, HumanBot, FasterMultiPlyNnBot
+from bots import MctsBot, ActualMctsBot, FasterSimpleNnBot, RandomBot, HumanBot, FasterMultiPlyNnBot
 
 """
 Round-robin tournament.
@@ -87,9 +87,15 @@ def main():
         print("Starting epoch", epoch)
         bots = [
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5]),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
-            FasterSimpleNnBot("training_data/trained_models/all.model"),
+            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99, 5], deterministic=True),
+            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99], deterministic=True),
+            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
+            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=True),
+            # FasterSimpleNnBot("training_data/trained_models/all.model"),
             # HumanBot(),
+
+            MctsBot(),
+            ActualMctsBot(),
         ]
 
         # Make sure names are unique

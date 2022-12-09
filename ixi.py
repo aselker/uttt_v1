@@ -38,7 +38,7 @@ def pretty_print(ixi_, whose_turn="x", prev_move=None):
     for i in [3, 7]:
         grid.insert(i, hline * 3 + cross + hline * 3 + cross + hline * 3)
 
-    return Fore.WHITE + "\n".join(("".join(row) for row in grid))
+    return "\n" + Fore.WHITE + "\n".join(("".join(row) for row in grid))
 
 
 def victory_state(ixi_):
