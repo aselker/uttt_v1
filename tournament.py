@@ -14,8 +14,8 @@ from bots import MctsBot, ActualMctsBot, FasterSimpleNnBot, RandomBot, HumanBot,
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 1
-NUM_PREFILLED_EACH = 32
+NUM_GAMES_PER_MATCHUP = 4
+NUM_PREFILLED_EACH = 20
 SOMETIMES_UNEQUAL = False
 RUN_FOREVER = False
 

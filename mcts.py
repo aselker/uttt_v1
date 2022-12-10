@@ -20,7 +20,7 @@ class Mcts:
             return {2: 0, 1: 1, -1: -1}[victory_state]
         self.run_playouts(state_)
         if self.debug:
-            print({self.reverse_cache[k]: v for k,v in self.cache.items()})
+            print({self.reverse_cache[k]: v for k, v in self.cache.items()})
             breakpoint()
         return self.cache[hash(state_)][0]
 
