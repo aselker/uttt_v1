@@ -12,12 +12,16 @@ class Mcts:
         # Playouts are mappings of {game state : pair of (average playout outcome where -1 is guaranteed loss, number of playouts that have been done)}
         self.cache = {}
         self.num_playouts = num_playouts
+        self.debug = False
 
     def get_value(self, state_):
         victory_state = state_.victory_state()
         if victory_state:
             return {2: 0, 1: 1, -1: -1}[victory_state]
         self.run_playouts(state_)
+        if self.debug:
+            print({self.reverse_cache[k]: v for k,v in self.cache.items()})
+            breakpoint()
         return self.cache[hash(state_)][0]
 
     def run_playouts(self, state_):
@@ -56,9 +60,16 @@ class Mcts:
 
 
 class ActualMcts(Mcts):
+    """
+    Maybe the cache should also store victory state and next valid states?
+    """
+
     def __init__(self, num_playouts=2000, exploration_constant=np.sqrt(2)):
         super().__init__(num_playouts)
         self.exploration_constant = exploration_constant
+        self.debug = False
+        if self.debug:
+            self.reverse_cache = {}
 
     def uct(self, state_, parent):
         # victory_state = state_.victory_state()
@@ -67,7 +78,7 @@ class ActualMcts(Mcts):
 
         cache_entry = self.cache[hash(state_)]
         parent_entry = self.cache[hash(parent)]
-        number_of_wins = (cache_entry[0] + 1) / 2
+        number_of_wins = (-cache_entry[0] + 1) / 2
         number_of_visits = cache_entry[1]
         parent_visits = parent_entry[1]
 
@@ -75,12 +86,16 @@ class ActualMcts(Mcts):
 
     def run_playout(self, state_):
         state_ = state_.copy()
+        if self.debug:
+            self.reverse_cache[hash(state_)] = state_.copy()
         old_hashes = [hash(state_)]
 
         # Selection and expansion.
         while True:
             if state_.victory_state():
                 old_hashes.append(hash(state_))
+                if self.debug:
+                    self.reverse_cache[hash(state_)] = state_.copy()
                 break
 
             potential_states = []
@@ -95,11 +110,20 @@ class ActualMcts(Mcts):
                 uct_scores = [self.uct(potential_state, state_) for potential_state in potential_states]
                 state_ = potential_states[np.argmax(uct_scores)]
                 old_hashes.append(hash(state_))
+                if self.debug:
+                    self.reverse_cache[hash(state_)] = state_.copy()
             else:
                 unvisited_states = np.array(potential_states, dtype=object)[np.logical_not(potential_state_has_been_visited)]
                 state_ = unvisited_states[np.random.randint(len(unvisited_states))]
                 old_hashes.append(hash(state_))
+                if self.debug:
+                    self.reverse_cache[hash(state_)] = state_.copy()
                 break
+
+        if self.debug and False:
+            # print({self.reverse_cache[k]: v for k,v in self.cache.items()})
+            print({self.reverse_cache[k]: self.cache.get(k, None) for k in old_hashes})
+            breakpoint()
 
         # Simulation.
         swap_parity = False
@@ -107,7 +131,6 @@ class ActualMcts(Mcts):
         while not victory_state:
             valid_moves = state_.list_valid_moves()
             state_.move(valid_moves[np.random.randint(len(valid_moves))])
-            # old_hashes.append(hash(state_))  # I think we stop recording states after leaving known space.
             swap_parity = not swap_parity
             victory_state = state_.victory_state()
 
