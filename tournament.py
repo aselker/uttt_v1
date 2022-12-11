@@ -3,6 +3,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # XXX
 
 import sys
+import time
 import pickle
 import numpy as np
 import itertools
@@ -21,7 +22,7 @@ Round-robin tournament.
 NUM_GAMES_PER_MATCHUP = 4
 RUN_FOREVER = True
 
-NUM_PREFILLED_EACH = 8
+NUM_PREFILLED_EACH = 3
 MAX_UNFAIR_MOVES = 6
 
 
@@ -93,8 +94,9 @@ def main():
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99, 5], deterministic=True),
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99], deterministic=True),
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=True),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=False),
+            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=False, tmp_refresh=True),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=True, tmp_refresh=True),
             # FasterSimpleNnBot("training_data/trained_models/all.model"),
             # HumanBot(),
             # MctsBot(),
@@ -105,6 +107,8 @@ def main():
         if not len(bots) == len({bot.name for bot in bots}):
             for i, bot in enumerate(bots):
                 bot.name = str(i) + "_" + bot.name
+
+        runtimes = {bot.name: [0.0, 0] for bot in bots}
 
         # All pairs, in alphabetical order
         matchups = list(itertools.combinations(bots, 2))
@@ -125,7 +129,8 @@ def main():
                 state_ = generate_partially_full_state()
 
                 # Unfair moves
-                num_unfair_moves = np.random.randint(MAX_UNFAIR_MOVES+1)
+                num_unfair_moves = np.random.randint(MAX_UNFAIR_MOVES + 1)
+                print(num_unfair_moves, "unfair moves.")
                 random_bot = RandomBot()
                 for turn_index in range(num_unfair_moves):
                     state_.move((random_bot if turn_index % 2 else even_bot).get_move(state_))
@@ -134,7 +139,12 @@ def main():
                 histories.append(history)
 
                 for turn_index in itertools.count():
+                    before_time = time.time()
                     state_.move((odd_bot if turn_index % 2 else even_bot).get_move(state_))
+                    after_time = time.time()
+                    bot_name = (odd_bot if turn_index % 2 else even_bot).name
+                    runtimes[bot_name][0] += after_time - before_time
+                    runtimes[bot_name][1] += 1
                     history[1].append(state_.copy())
                     victory_state = state_.victory_state()
                     if victory_state:
@@ -154,6 +164,7 @@ def main():
         print("Written to", filename)
 
         summarize_histories(histories)
+        print("Average runtimes:", {k: v[0] / v[1] for k, v in runtimes.items()})
 
         if not RUN_FOREVER:
             break

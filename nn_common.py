@@ -43,7 +43,7 @@ def make_model():
     return keras.Model([ixi_input, prev_move_input], output)
 
 
-def call_model_on_states(model, states):
+def call_model_on_states(model, states, tmp_refresh=False):
     if isinstance(states, state.State):
         was_single = True
         states = [states]
@@ -55,9 +55,9 @@ def call_model_on_states(model, states):
         prev_moves[i, state_.prev_move[2], state_.prev_move[3]] = 1
     prediction = model.predict([np.array([state_.ixi for state_ in states]), prev_moves], verbose=False)[:, 0]
 
-    # TODO: Only run this 1 in N times
-    keras.backend.clear_session()
-    gc.collect()
+    if (not tmp_refresh) or (np.random.rand() < 0.01):
+        keras.backend.clear_session()
+        gc.collect()
 
     if was_single:
         return prediction[0]
