@@ -37,7 +37,7 @@ def make_model():
     cxc_outputs_and_prev_move = keras.layers.Concatenate()(cxc_outputs + [prev_move_flattened])
     ixi_intermediate = keras.layers.Reshape(((arm_thickness * 9) + 9,))(cxc_outputs_and_prev_move)
     for _ in range(4):
-        ixi_intermediate = keras.layers.Dense(128, activation="relu")(ixi_intermediate)
+        ixi_intermediate = keras.layers.Dense(256, activation="relu")(ixi_intermediate)
     output = keras.layers.Dense(1, activation="tanh")(ixi_intermediate)
 
     return keras.Model([ixi_input, prev_move_input], output)
