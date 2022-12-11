@@ -15,9 +15,10 @@ Round-robin tournament.
 """
 
 NUM_GAMES_PER_MATCHUP = 4
-NUM_PREFILLED_EACH = 20
-SOMETIMES_UNEQUAL = False
 RUN_FOREVER = False
+
+NUM_PREFILLED_EACH = 8
+MAX_UNFAIR_MOVES = 6
 
 
 def generate_partially_full_state():
@@ -26,8 +27,6 @@ def generate_partially_full_state():
     while victory_state:
         to_sample = [1] * NUM_PREFILLED_EACH + [-1] * NUM_PREFILLED_EACH + [0] * (81 - 2 * NUM_PREFILLED_EACH)
         to_sample = np.array(to_sample, dtype=np.int8)
-        if SOMETIMES_UNEQUAL and np.random.choice([0, 1]):
-            to_sample[-1] = -1
         np.random.shuffle(to_sample)
         ixi_ = to_sample.reshape((3, 3, 3, 3))
         victory_state = ixi.victory_state(ixi_)
@@ -90,11 +89,11 @@ def main():
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99, 5], deterministic=True),
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99], deterministic=True),
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
-            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=True),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=True),
+            # FasterMultiPlyNnBot("training_data/trained_models/all.model", []),
             # FasterSimpleNnBot("training_data/trained_models/all.model"),
             # HumanBot(),
-
-            MctsBot(),
+            # MctsBot(),
             ActualMctsBot(exploration_constant=0.1),
         ]
 
@@ -120,6 +119,13 @@ def main():
                     odd_bot = bot1
 
                 state_ = generate_partially_full_state()
+
+                # Unfair moves
+                num_unfair_moves = np.random.randint(MAX_UNFAIR_MOVES+1)
+                random_bot = RandomBot()
+                for turn_index in range(num_unfair_moves):
+                    state_.move((random_bot if turn_index % 2 else even_bot).get_move(state_))
+
                 history = ((even_bot.name, odd_bot.name), [state_.copy()])
                 histories.append(history)
 

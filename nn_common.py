@@ -55,6 +55,7 @@ def call_model_on_states(model, states):
         prev_moves[i, state_.prev_move[2], state_.prev_move[3]] = 1
     prediction = model.predict([np.array([state_.ixi for state_ in states]), prev_moves], verbose=False)[:, 0]
 
+    # TODO: Only run this 1 in N times
     keras.backend.clear_session()
     gc.collect()
 
