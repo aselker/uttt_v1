@@ -1,3 +1,7 @@
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # XXX
+
 import sys
 import pickle
 import numpy as np
@@ -15,7 +19,7 @@ Round-robin tournament.
 """
 
 NUM_GAMES_PER_MATCHUP = 4
-RUN_FOREVER = False
+RUN_FOREVER = True
 
 NUM_PREFILLED_EACH = 8
 MAX_UNFAIR_MOVES = 6
@@ -90,11 +94,11 @@ def main():
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99], deterministic=True),
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
             FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=True),
-            # FasterMultiPlyNnBot("training_data/trained_models/all.model", []),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=False),
             # FasterSimpleNnBot("training_data/trained_models/all.model"),
             # HumanBot(),
             # MctsBot(),
-            ActualMctsBot(exploration_constant=0.1),
+            # ActualMctsBot(exploration_constant=0.1),
         ]
 
         # Make sure names are unique
