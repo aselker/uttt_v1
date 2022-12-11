@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
+import utils
 from nn_common import make_model
 
 
@@ -44,6 +45,7 @@ def ingest_and_regurgitate(in_path, out_path):
     filenames = list(filenames)  # So we can shuffle them
     np.random.shuffle(filenames)  # So if we stop early with LIMIT_EXAMPLE_COUNT, we still get an even-ish distribution.
     for filename in filenames:
+        print(filename)
         with open(filename, "rb") as f:
             histories = pickle.load(f)
 
@@ -70,8 +72,8 @@ def ingest_and_regurgitate(in_path, out_path):
                 prev_move = np.zeros((3, 3))
                 prev_move[state_.prev_move[2], state_.prev_move[3]] = 1
                 for rotation in [0, 1, 2, 3]:
-                    rotated_ixi = np.rot90(np.rot90(state_.ixi, axes=(2, 3), k=rotation), axes=(0, 1), k=rotation)
-                    rotated_prev_move = np.rot90(prev_move, k=rotation)
+                    rotated_ixi = utils.rotate_4d(state_.ixi, n=rotation)
+                    rotated_prev_move = utils.rotate_2d(prev_move, n=rotation)
                     examples_in_which_to_save.append((rotated_ixi, rotated_prev_move, value))
                     examples_in_which_to_save.append((rotated_ixi.transpose(1, 0, 3, 2), rotated_prev_move.T, value))
                     n_total_pairs += 2
