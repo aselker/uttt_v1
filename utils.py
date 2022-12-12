@@ -21,11 +21,11 @@ def rotate_2d(x, n=1):
         case 0:
             return x
         case 1:
-            return x.T[::-1]
+            return x.T[..., ::-1, :]
         case 2:
-            return x[::-1, ::-1]
+            return x[..., ::-1, ::-1]
         case 3:
-            return x.T[:, ::-1]
+            return x.T[..., :, ::-1]
 
 
 def rotate_4d(x, n=1):
@@ -33,19 +33,19 @@ def rotate_4d(x, n=1):
         case 0:
             return x
         case 1:
-            return x.transpose(1, 0, 3, 2)[::-1, :, ::-1, :]
+            return x.transpose(0, -3, -4, -1, -2)[..., ::-1, :, ::-1, :]
         case 2:
-            return x[::-1, ::-1, ::-1, ::-1]
+            return x[..., ::-1, ::-1, ::-1, ::-1]
         case 3:
-            return x.transpose(1, 0, 3, 2)[:, ::-1, :, ::-1]
+            return x.transpose(0, -3, -4, -1, -2)[..., :, ::-1, :, ::-1]
 
 
 if __name__ == "__main__":
     # TODO: Time
-    original = np.random.randint(10, size=(3, 3), dtype=np.int8)
+    original = np.random.randint(10, size=(8, 3, 3), dtype=np.int8)
     a = rotate_2d(original)
-    b = np.rot90(original, axes=(0, 1))
-    original = np.random.randint(10, size=(3, 3, 3, 3), dtype=np.int8)
+    b = np.rot90(original, axes=(1, 2))
+    original = np.random.randint(10, size=(8, 3, 3, 3, 3), dtype=np.int8)
     a = rotate_4d(original)
-    b = np.rot90(np.rot90(original, axes=(0, 1)), axes=(2, 3))
+    b = np.rot90(np.rot90(original, axes=(1, 2)), axes=(3, 4))
     assert np.all(a == b)

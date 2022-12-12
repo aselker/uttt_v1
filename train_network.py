@@ -20,7 +20,7 @@ LIMIT_EXAMPLE_COUNT = None
 
 # Training
 N_EPOCHS = 64
-TEST_PORTION = 0.02
+TEST_PORTION = 0.005
 BATCH_SIZE = 8192
 LEARN_RATE = 0.0003  # 0.01 too high.  I think Keras defaults to 0.001.  Karpathy constant == 0.0003
 
@@ -71,12 +71,8 @@ def ingest_and_regurgitate(in_path, out_path):
                 value = eventual_victory_state if (len(history) - state_index) % 2 else -eventual_victory_state
                 prev_move = np.zeros((3, 3))
                 prev_move[state_.prev_move[2], state_.prev_move[3]] = 1
-                for rotation in [0, 1, 2, 3]:
-                    rotated_ixi = utils.rotate_4d(state_.ixi, n=rotation)
-                    rotated_prev_move = utils.rotate_2d(prev_move, n=rotation)
-                    examples_in_which_to_save.append((rotated_ixi, rotated_prev_move, value))
-                    examples_in_which_to_save.append((rotated_ixi.transpose(1, 0, 3, 2), rotated_prev_move.T, value))
-                    n_total_pairs += 2
+                examples_in_which_to_save.append((state_.ixi, prev_move, value))
+                n_total_pairs += 1
 
         if LIMIT_EXAMPLE_COUNT and LIMIT_EXAMPLE_COUNT <= n_total_pairs:
             break
@@ -94,6 +90,9 @@ def ingest_and_regurgitate(in_path, out_path):
     with open(out_path, "wb") as f:
         np.savez(
             f,
+            metadata={
+                "augmented": False,
+            },
             train_ixis=train_ixis,
             train_prev_moves=train_prev_moves,
             train_results=train_results,
@@ -104,18 +103,36 @@ def ingest_and_regurgitate(in_path, out_path):
 
 
 class SequenceFromNumpyArrays(tf.keras.utils.Sequence):
-    def __init__(self, batch_size, ixis, prev_moves, results):
+    def __init__(self, batch_size, ixis, prev_moves, results, do_augment):
         self.ixis = ixis
         self.prev_moves = prev_moves
         self.results = results
         self.batch_size = batch_size
+        self.do_augment = do_augment
+        if do_augment:
+            assert not batch_size%8
 
     def __len__(self):
-        return int(np.ceil(len(self.results) / self.batch_size))
+        if do_augment:
+            return int(np.ceil(len(self.results) * 8 / self.batch_size))
+        else:
+            return int(np.ceil(len(self.results) / self.batch_size))
 
     def __getitem__(self, index):
-        index_slice = slice(index * self.batch_size, (index + 1) * self.batch_size)
-        return [self.ixis[index_slice], self.prev_moves[index_slice]], self.results[index_slice]
+        if do_augment:
+            index_slice = slice(index * self.batch_size / 8, (index + 1) * self.batch_size / 8)
+            ixis = self.ixis[index_slice]
+            ixis = np.concatenate([utils.rotate_4d(ixis, n=n) for n in range(4)], axis=0)
+            ixis = np.concatenate([ixis, ixis.transpose(0, 2, 1, 4, 3)])
+            prev_moves = self.prev_moves[index_slice]
+            prev_moves = np.concatenate([utils.rotate_2d(prev_moves, n=n) for n in range(4)], axis=0)
+            prev_moves = np.concatenate([prev_moves, prev_moves.transpose(0, 2, 1)])
+            results = self.results[index_slice]
+            results = np.concatenate([results for _ in range(8)], axis=0)
+            return [ixis, prev_moves], results
+        else:
+            index_slice = slice(index * self.batch_size, (index + 1) * self.batch_size)
+            return [self.ixis[index_slice], self.prev_moves[index_slice]], self.results[index_slice]
 
 
 def main():
@@ -124,7 +141,7 @@ def main():
         return
 
     with open(sys.argv[2], "rb") as f:
-        loaded = np.load(f)
+        loaded = np.load(f, allow_pickle=True)
         if "ixis" in loaded:  # Split after loading
             all_ixis = loaded["ixis"]
             all_prev_moves = loaded["prev_moves"]
@@ -147,18 +164,12 @@ def main():
             test_ixis = loaded["test_ixis"]
             test_prev_moves = loaded["test_prev_moves"]
             test_results = loaded["test_results"]
+            do_augment = "metadata" in loaded and (not loaded["metadata"]["augmented"])
+        del loaded
 
     print(len(train_ixis), "train pairs,", len(test_ixis), "test pairs")
 
-    # # Explicitly move training data onto the CPU?
-    # with tf.device("/CPU:0"):
-    #     train_ixis = tf.convert_to_tensor(train_ixis)
-    #     test_ixis = tf.convert_to_tensor(test_ixis)
-    #     train_prev_moves = tf.convert_to_tensor(train_prev_moves)
-    #     test_prev_moves = tf.convert_to_tensor(test_prev_moves)
-    #     train_results = tf.convert_to_tensor(train_results)
-    #     test_results = tf.convert_to_tensor(test_results)
-    train_sequence = SequenceFromNumpyArrays(BATCH_SIZE, train_ixis, train_prev_moves, train_results)
+    train_sequence = SequenceFromNumpyArrays(BATCH_SIZE, train_ixis, train_prev_moves, train_results, do_augment=do_augment)
 
     model = make_model()
     if len(sys.argv) == 4:
