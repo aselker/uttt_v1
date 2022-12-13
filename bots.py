@@ -106,6 +106,7 @@ class FasterMultiPlyNnBot:
                 return possible_moves[np.random.choice(np.arange(len(possible_moves)))]
             assert np.all(values > -1)  # Avoid 1/0
             weights = 1 / (1 + (values - 1) / 2) - 1
+            weights = weights**2  # Stronk!!
             assert np.all(0 <= weights)  # Negative weight?  Could just clip value I think, /shrug
             weights /= np.sum(weights)
             return possible_moves[np.random.choice(np.arange(len(possible_moves)), p=weights)]

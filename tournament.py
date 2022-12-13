@@ -19,11 +19,17 @@ from bots import MctsBot, ActualMctsBot, FasterSimpleNnBot, RandomBot, HumanBot,
 Round-robin tournament.
 """
 
+# # Generation mode
 NUM_GAMES_PER_MATCHUP = 8
 RUN_FOREVER = True
-
 NUM_PREFILLED_EACH = 2
 MAX_UNFAIR_MOVES = 8
+
+# Comparison mode
+# NUM_GAMES_PER_MATCHUP = 8
+# RUN_FOREVER = False
+# NUM_PREFILLED_EACH = 1
+# MAX_UNFAIR_MOVES = 0
 
 
 def generate_partially_full_state():
@@ -90,14 +96,9 @@ def main():
     for epoch in itertools.count():
         print("Starting epoch", epoch)
         bots = [
-            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5]),
-            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99, 5], deterministic=True),
-            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99], deterministic=True),
-            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
-            # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=False),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
-            # FasterSimpleNnBot("training_data/trained_models/all.model"),
+            FasterMultiPlyNnBot("training_data/trained_models/2022_12_12_deeper.model", [5], deterministic=True),
+            FasterMultiPlyNnBot("training_data/trained_models/2022_12_12_deeper.model", [5], deterministic=False),
+            # FasterSimpleNnBot("training_data/trained_models/2022_12_12_deeper.model")
             # HumanBot(),
             # MctsBot(),
             # ActualMctsBot(exploration_constant=0.1),
