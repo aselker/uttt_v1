@@ -19,9 +19,9 @@ DROP_LAST = True
 LIMIT_EXAMPLE_COUNT = None
 
 # Training
-N_EPOCHS = 64
+N_EPOCHS = 128
 TEST_PORTION = 0.005
-BATCH_SIZE = 8192
+BATCH_SIZE = 16384
 LEARN_RATE = 0.0003  # 0.01 too high.  I think Keras defaults to 0.001.  Karpathy constant == 0.0003
 
 
@@ -109,18 +109,18 @@ class SequenceFromNumpyArrays(tf.keras.utils.Sequence):
         self.results = results
         self.batch_size = batch_size
         self.do_augment = do_augment
-        if do_augment:
-            assert not batch_size%8
+        if self.do_augment:
+            assert not batch_size % 8
 
     def __len__(self):
-        if do_augment:
+        if self.do_augment:
             return int(np.ceil(len(self.results) * 8 / self.batch_size))
         else:
             return int(np.ceil(len(self.results) / self.batch_size))
 
     def __getitem__(self, index):
-        if do_augment:
-            index_slice = slice(index * self.batch_size / 8, (index + 1) * self.batch_size / 8)
+        if self.do_augment:
+            index_slice = slice(index * self.batch_size // 8, (index + 1) * self.batch_size // 8)
             ixis = self.ixis[index_slice]
             ixis = np.concatenate([utils.rotate_4d(ixis, n=n) for n in range(4)], axis=0)
             ixis = np.concatenate([ixis, ixis.transpose(0, 2, 1, 4, 3)])
@@ -164,7 +164,7 @@ def main():
             test_ixis = loaded["test_ixis"]
             test_prev_moves = loaded["test_prev_moves"]
             test_results = loaded["test_results"]
-            do_augment = "metadata" in loaded and (not loaded["metadata"]["augmented"])
+            do_augment = "metadata" in loaded and (not loaded["metadata"].item()["augmented"])
         del loaded
 
     print(len(train_ixis), "train pairs,", len(test_ixis), "test pairs")
