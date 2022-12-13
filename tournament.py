@@ -19,11 +19,11 @@ from bots import MctsBot, ActualMctsBot, FasterSimpleNnBot, RandomBot, HumanBot,
 Round-robin tournament.
 """
 
-NUM_GAMES_PER_MATCHUP = 4
+NUM_GAMES_PER_MATCHUP = 8
 RUN_FOREVER = True
 
-NUM_PREFILLED_EACH = 3
-MAX_UNFAIR_MOVES = 6
+NUM_PREFILLED_EACH = 2
+MAX_UNFAIR_MOVES = 8
 
 
 def generate_partially_full_state():
@@ -95,8 +95,8 @@ def main():
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [99], deterministic=True),
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
             # FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=False, tmp_refresh=True),
-            FasterMultiPlyNnBot("training_data/trained_models/all.model", [], deterministic=True, tmp_refresh=True),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=False, tmp_refresh=True),
+            FasterMultiPlyNnBot("training_data/trained_models/all.model", [5], deterministic=True, tmp_refresh=True),
             # FasterSimpleNnBot("training_data/trained_models/all.model"),
             # HumanBot(),
             # MctsBot(),

@@ -42,6 +42,35 @@ def make_model():
 
     return keras.Model([ixi_input, prev_move_input], output)
 
+def make_older_model():
+    # Do not change this!  It's compatible with "all.model"
+    regularizer = None
+    # regularizer = kernel_regularizer=keras.regularizers.L1L2(l1=0.01, l2=0.01)
+
+    arm_thickness = 32
+
+    ixi_input = keras.Input(shape=(3, 3, 3, 3))
+    flattened_once = keras.layers.Reshape((3, 3, 9))(ixi_input)
+
+    cxc_layers = [keras.layers.Dense(arm_thickness, activation="relu", kernel_regularizer=regularizer) for _ in range(4)]
+    cxc_outputs = []
+    for i in range(3):
+        for j in range(3):
+            cxc_intermediate = flattened_once[:, i, j]
+            for layer in cxc_layers:
+                cxc_intermediate = layer(cxc_intermediate)
+            cxc_outputs.append(cxc_intermediate)
+
+    prev_move_input = keras.Input(shape=(3, 3))
+    prev_move_flattened = keras.layers.Reshape((9,))(prev_move_input)
+    cxc_outputs_and_prev_move = keras.layers.Concatenate()(cxc_outputs + [prev_move_flattened])
+    ixi_intermediate = keras.layers.Reshape(((arm_thickness * 9) + 9,))(cxc_outputs_and_prev_move)
+    for _ in range(4):
+        ixi_intermediate = keras.layers.Dense(256, activation="relu", kernel_regularizer=regularizer)(ixi_intermediate)
+    output = keras.layers.Dense(1, activation="tanh", kernel_regularizer=regularizer)(ixi_intermediate)
+
+    return keras.Model([ixi_input, prev_move_input], output)
+
 
 def call_model_on_states(model, states, tmp_refresh=False):
     if isinstance(states, state.State):
