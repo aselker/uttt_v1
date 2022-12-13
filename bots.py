@@ -3,12 +3,12 @@ from mcts import Mcts, ActualMcts
 import nn_common
 
 
-def check_victory_and_call_model(model, states, tmp_refresh=False):
+def check_victory_and_call_model(model, states):
     values = np.array([state_.victory_state() for state_ in states], dtype=float)
     unfinished = values == 0
     values[values == 2] = 0
     if np.any(unfinished):  # Don't run on empty list, it makes Keras unhappy
-        values[unfinished] = nn_common.call_model_on_states(model, np.array(states, dtype=object)[unfinished], tmp_refresh=tmp_refresh)
+        values[unfinished] = nn_common.call_model_on_states(model, np.array(states, dtype=object)[unfinished])
     return values
 
 
@@ -74,15 +74,17 @@ class FasterSimpleNnBot:
 
 
 class FasterMultiPlyNnBot:
-    def __init__(self, filename, plies, deterministic=False, tmp_refresh=False):
+    def __init__(self, filename, plies, deterministic=False, older_model=False):
         self.plies = plies
-        self.nn = nn_common.make_model()
+        if older_model:
+            self.nn = nn_common.make_older_model()
+        else:
+            self.nn = nn_common.make_model()
         self.nn.load_weights(filename)
         self.deterministic = deterministic
         self.name = "FasterMultiPlyNnBot_" + filename + "_" + str(plies)
         if deterministic:
             self.name = self.name + "_deterministic"
-        self.tmp_refresh = tmp_refresh
 
     def __str__(self):
         return self.name
@@ -133,7 +135,7 @@ class FasterMultiPlyNnBot:
         # Child values are positive if we leave the opponent in a good position.  First check their victory states; then, if
         # they're not finished, run the NN.
         # TODO: Skip this step if remaining_plies[0] > max(len(child_states_ragged))
-        child_values_flat = check_victory_and_call_model(self.nn, child_states_flat, self.tmp_refresh)
+        child_values_flat = check_victory_and_call_model(self.nn, child_states_flat)
 
         child_values_ragged = []
         for i, child_states in enumerate(child_states_ragged):

@@ -42,6 +42,7 @@ def make_model():
 
     return keras.Model([ixi_input, prev_move_input], output)
 
+
 def make_older_model():
     # Do not change this!  It's compatible with "all.model"
     regularizer = None
@@ -72,19 +73,19 @@ def make_older_model():
     return keras.Model([ixi_input, prev_move_input], output)
 
 
-def call_model_on_states(model, states, tmp_refresh=False):
+def call_model_on_states(model, states):
     if isinstance(states, state.State):
         was_single = True
         states = [states]
     else:
-        was_single=False
+        was_single = False
 
     prev_moves = np.zeros((len(states), 3, 3))
     for i, state_ in enumerate(states):
         prev_moves[i, state_.prev_move[2], state_.prev_move[3]] = 1
     prediction = model.predict([np.array([state_.ixi for state_ in states]), prev_moves], verbose=False)[:, 0]
 
-    if (not tmp_refresh) or (np.random.rand() < 0.01):
+    if np.random.rand() < 0.01:
         keras.backend.clear_session()
         gc.collect()
 
