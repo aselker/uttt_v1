@@ -29,7 +29,7 @@ MAX_UNFAIR_MOVES = 8
 # NUM_GAMES_PER_MATCHUP = 8
 # RUN_FOREVER = False
 # NUM_PREFILLED_EACH = 1
-# MAX_UNFAIR_MOVES = 0
+MAX_UNFAIR_MOVES = 0
 
 
 def generate_partially_full_state():
@@ -96,8 +96,9 @@ def main():
     for epoch in itertools.count():
         print("Starting epoch", epoch)
         bots = [
-            FasterMultiPlyNnBot("training_data/trained_models/2022_12_12_deeper.model", [5], deterministic=True),
-            FasterMultiPlyNnBot("training_data/trained_models/2022_12_12_deeper.model", [5], deterministic=False),
+            FasterMultiPlyNnBot("training_data/trained_models/2022_12_14_larger.model", [5], older_model=True, deterministic=True),
+            FasterMultiPlyNnBot("training_data/trained_models/2022_12_14_larger.model", [5], older_model=True, deterministic=False),
+            # FasterMultiPlyNnBot("2022_12_14_larger.model", [5], older_model=False, deterministic=True),
             # FasterSimpleNnBot("training_data/trained_models/2022_12_12_deeper.model")
             # HumanBot(),
             # MctsBot(),

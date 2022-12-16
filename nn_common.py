@@ -36,15 +36,15 @@ def make_model():
     prev_move_flattened = keras.layers.Reshape((9,))(prev_move_input)
     cxc_outputs_and_prev_move = keras.layers.Concatenate()(cxc_outputs + [prev_move_flattened])
     ixi_intermediate = keras.layers.Reshape(((arm_thickness * 9) + 9,))(cxc_outputs_and_prev_move)
-    for _ in range(7):
-        ixi_intermediate = keras.layers.Dense(128, activation="relu", kernel_regularizer=regularizer)(ixi_intermediate)
+    for _ in range(16):
+        ixi_intermediate = keras.layers.Dense(192, activation="relu", kernel_regularizer=regularizer)(ixi_intermediate)
     output = keras.layers.Dense(1, activation="tanh", kernel_regularizer=regularizer)(ixi_intermediate)
 
     return keras.Model([ixi_input, prev_move_input], output)
 
 
 def make_older_model():
-    # Do not change this!  It's compatible with "all.model"
+    # Compatible with  2022_12_14_larger.model
     regularizer = None
     # regularizer = kernel_regularizer=keras.regularizers.L1L2(l1=0.01, l2=0.01)
 
@@ -66,8 +66,8 @@ def make_older_model():
     prev_move_flattened = keras.layers.Reshape((9,))(prev_move_input)
     cxc_outputs_and_prev_move = keras.layers.Concatenate()(cxc_outputs + [prev_move_flattened])
     ixi_intermediate = keras.layers.Reshape(((arm_thickness * 9) + 9,))(cxc_outputs_and_prev_move)
-    for _ in range(4):
-        ixi_intermediate = keras.layers.Dense(256, activation="relu", kernel_regularizer=regularizer)(ixi_intermediate)
+    for _ in range(16):
+        ixi_intermediate = keras.layers.Dense(192, activation="relu", kernel_regularizer=regularizer)(ixi_intermediate)
     output = keras.layers.Dense(1, activation="tanh", kernel_regularizer=regularizer)(ixi_intermediate)
 
     return keras.Model([ixi_input, prev_move_input], output)
