@@ -23,13 +23,13 @@ Round-robin tournament.
 NUM_GAMES_PER_MATCHUP = 8
 RUN_FOREVER = True
 NUM_PREFILLED_EACH = 2
-MAX_UNFAIR_MOVES = 8
+MAX_UNFAIR_MOVES = 6
 
 # Comparison mode
 # NUM_GAMES_PER_MATCHUP = 8
 # RUN_FOREVER = False
 # NUM_PREFILLED_EACH = 1
-MAX_UNFAIR_MOVES = 0
+# MAX_UNFAIR_MOVES = 0
 
 
 def generate_partially_full_state():

@@ -19,10 +19,10 @@ DROP_LAST = True
 LIMIT_EXAMPLE_COUNT = None
 
 # Training
-N_EPOCHS = 48
+N_EPOCHS = 24
 TEST_PORTION = 0.005
 BATCH_SIZE = 16384
-LEARN_RATE = 0.0002  # 0.01 too high.  I think Keras defaults to 0.001.  Karpathy constant == 0.0003
+LEARN_RATE = 0.0004  # 0.01 too high.  I think Keras defaults to 0.001.  Karpathy constant == 0.0003
 
 
 np.set_printoptions(precision=32)
@@ -45,7 +45,6 @@ def ingest_and_regurgitate(in_path, out_path):
     filenames = list(filenames)  # So we can shuffle them
     np.random.shuffle(filenames)  # So if we stop early with LIMIT_EXAMPLE_COUNT, we still get an even-ish distribution.
     for filename in filenames:
-        print(filename)
         with open(filename, "rb") as f:
             histories = pickle.load(f)
 
