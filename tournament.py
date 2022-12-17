@@ -20,16 +20,16 @@ Round-robin tournament.
 """
 
 # # Generation mode
-NUM_GAMES_PER_MATCHUP = 8
-RUN_FOREVER = True
-NUM_PREFILLED_EACH = 2
-MAX_UNFAIR_MOVES = 6
-
-# Comparison mode
 # NUM_GAMES_PER_MATCHUP = 8
-# RUN_FOREVER = False
-# NUM_PREFILLED_EACH = 1
-# MAX_UNFAIR_MOVES = 0
+# RUN_FOREVER = True
+# NUM_PREFILLED_EACH = 2
+# MAX_UNFAIR_MOVES = 6
+
+# Competition mode
+NUM_GAMES_PER_MATCHUP = 1
+RUN_FOREVER = False
+NUM_PREFILLED_EACH = 0
+MAX_UNFAIR_MOVES = 0
 
 
 def generate_partially_full_state():
@@ -42,8 +42,11 @@ def generate_partially_full_state():
         ixi_ = to_sample.reshape((3, 3, 3, 3))
         victory_state = ixi.victory_state(ixi_)
 
-        possible_prev_moves = np.transpose((ixi_ == -1).nonzero())
-        prev_move = tuple(possible_prev_moves[np.random.randint(len(possible_prev_moves))])
+        if NUM_PREFILLED_EACH:
+            possible_prev_moves = np.transpose((ixi_ == -1).nonzero())
+            prev_move = tuple(possible_prev_moves[np.random.randint(len(possible_prev_moves))])
+        else:
+            prev_move = None
         state_ = State(ixi_, prev_move)
     return state_
 
@@ -96,11 +99,10 @@ def main():
     for epoch in itertools.count():
         print("Starting epoch", epoch)
         bots = [
-            FasterMultiPlyNnBot("training_data/trained_models/2022_12_14_larger.model", [5], older_model=True, deterministic=True),
-            FasterMultiPlyNnBot("training_data/trained_models/2022_12_14_larger.model", [5], older_model=True, deterministic=False),
-            # FasterMultiPlyNnBot("2022_12_14_larger.model", [5], older_model=False, deterministic=True),
+            # FasterMultiPlyNnBot("training_data/trained_models/2022_12_14_larger.model", [5], older_model=True, deterministic=True),
+            FasterMultiPlyNnBot("training_data/trained_models/2022-12-16_256-then-192.model", [5], older_model=False, deterministic=True),
+            HumanBot(),
             # FasterSimpleNnBot("training_data/trained_models/2022_12_12_deeper.model")
-            # HumanBot(),
             # MctsBot(),
             # ActualMctsBot(exploration_constant=0.1),
         ]
