@@ -12,6 +12,7 @@ import cxc
 
 
 def pretty_print(ixi_, whose_turn="x", prev_move=None):
+    assert False, "deprecated"
     if whose_turn == "x":
         marks = {0: " ", 1: "x", -1: "o", 2: "?"}
     elif whose_turn == "o":
@@ -39,7 +40,6 @@ def pretty_print(ixi_, whose_turn="x", prev_move=None):
         grid.insert(i, hline * 3 + cross + hline * 3 + cross + hline * 3)
 
     return "\n" + Fore.WHITE + "\n".join(("".join(row) for row in grid))
-
 
 def victory_state(ixi_):
     cxc_states = np.array([[cxc.victory_state(cxc_) for cxc_ in row] for row in ixi_])
