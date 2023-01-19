@@ -26,9 +26,9 @@ Round-robin tournament.
 # MAX_UNFAIR_MOVES = 6
 
 # Competition mode
-NUM_GAMES_PER_MATCHUP = 1
+NUM_GAMES_PER_MATCHUP = 8
 RUN_FOREVER = False
-NUM_PREFILLED_EACH = 0
+NUM_PREFILLED_EACH = 1
 MAX_UNFAIR_MOVES = 0
 
 
@@ -99,9 +99,9 @@ def main():
     for epoch in itertools.count():
         print("Starting epoch", epoch)
         bots = [
-            # FasterMultiPlyNnBot("training_data/trained_models/2022_12_14_larger.model", [5], older_model=True, deterministic=True),
             FasterMultiPlyNnBot("training_data/trained_models/2022-12-16_256-then-192.model", [5], older_model=False, deterministic=True),
-            HumanBot(),
+            FasterMultiPlyNnBot("training_data/trained_models/2022-12-16_256-then-192_again.model", [5], older_model=False, deterministic=True),
+            # HumanBot(),
             # FasterSimpleNnBot("training_data/trained_models/2022_12_12_deeper.model")
             # MctsBot(),
             # ActualMctsBot(exploration_constant=0.1),
