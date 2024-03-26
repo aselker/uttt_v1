@@ -1,7 +1,5 @@
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # XXX
-
 import sys
 import time
 import pickle
@@ -89,12 +87,15 @@ def summarize_histories(histories):
 
 
 def main():
+    if len(sys.argv) != 2:
+        print("Usage: tournament.py directory_to_store_history")
+        return
+
     if sys.argv[1] == "summarize":
         with open(sys.argv[2], "rb") as f:
             histories = pickle.load(f)
         summarize_histories(histories)
         return
-    assert len(sys.argv) == 2
 
     for epoch in itertools.count():
         print("Starting epoch", epoch)
